@@ -655,155 +655,156 @@ public class Gesture extends Events {
   };
   // _onTouchmove
 
-  function _onTouchend(event_) {
+  static Function _onTouchend = new Function() {
+    public boolean f(Event e) {
+      TouchEvent event_ = e.cast();
+      // ignore bubbled handlers
+      // if ( event_.currentTarget !== event_.target ) { return; }
+      GQuery _$element = $(event_.getCurrentEventTarget());
+      boolean _bHasTouches = event_.changedTouches().length() > 0;
+      int _iTouches = (_bHasTouches) ? event_.changedTouches().length() : 1;
+      int _iScreenX = (_bHasTouches) ? _eventBase.screenX() : event_.screenX();
+      int _iScreenY = (_bHasTouches) ? _eventBase.screenY() : event_.screenY();
 
-    // ignore bubbled handlers
-    // if ( event_.currentTarget !== event_.target ) { return; }
+      // trigger custom notification
+      _$element.trigger($.jGestures.events().touchendStart(),event_);
 
-    var _$element = jQuery(event_.currentTarget);
-    var _bHasTouches = !!event_.changedTouches;
-    var _iTouches = (_bHasTouches) ? event_.changedTouches.length : "1";
-    var _iScreenX = (_bHasTouches) ? event_.changedTouches[0].screenX : event_.screenX;
-    var _iScreenY = (_bHasTouches) ? event_.changedTouches[0].screenY : event_.screenY;
+      // var _$element = jQuery(event_.target);
+      // remove events
+      if($.hasGestures) {
+        _$element.unbind("touchmove", _onTouchmove);
+        _$element.unbind("touchend", _onTouchend);
+      }
+      // event substitution
+      else {
+//        event_.currentTarget.removeEventListener('mousemove', _onTouchmove, false);
+//        event_.currentTarget.removeEventListener('mouseup', _onTouchend, false);
+        _$element.unbind("mousemove", _onTouchmove);
+        _$element.unbind("mouseup", _onTouchend);
+      }
+      // get all bound pseudo events
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
 
-    // trigger custom notification
-    _$element.triggerHandler($.jGestures.events.touchendStart,event_);
+      // Android fix, let _onTouchstart to store the right number of fingers
+      _iTouches = _oDatajQueryGestures.getInt("fingers");
+      _oDatajQueryGestures.set("fingers", 0);
 
-    // var _$element = jQuery(event_.target);
-    // remove events
-    if($.hasGestures) {
-      event_.currentTarget.removeEventListener("touchmove", _onTouchmove, false);
-      event_.currentTarget.removeEventListener("touchend", _onTouchend, false);
-    }
-    // event substitution
-    else {
-//      event_.currentTarget.removeEventListener("mousemove", _onTouchmove, false);
-//      event_.currentTarget.removeEventListener("mouseup", _onTouchend, false);
-      _$element.unbind("mousemove", _onTouchmove);
-      _$element.unbind("mouseup", _onTouchend);
-    }
-    // get all bound pseudo events
-    var _oDatajQueryGestures = _$element.data("ojQueryGestures");
+      // if the current change on the x/y position is above the defined threshold for moving an element set the moved flag
+      // to distinguish between a moving gesture and a shaking finger trying to tap
+      boolean _bHasMoved = (
+        Math.abs(oStartTouch.screenX() - _iScreenX) > $.jGestures.defaults().thresholdMove() ||
+        Math.abs(oStartTouch.screenY() - _iScreenY) > $.jGestures.defaults().thresholdMove()
+      ) ? true : false;
 
-    // Android fix, let _onTouchstart to store the right number of fingers
-    _iTouches = _oDatajQueryGestures.fingers;
-    _oDatajQueryGestures.fingers = 0;
+      // if the current change on the x/y position is above the defined threshold for swiping set the moved flag
+      // to indicate we're dealing with a swipe gesture
+      boolean _bHasSwipeGesture = (
+        Math.abs(oStartTouch.screenX() - _iScreenX) > $.jGestures.defaults().thresholdSwipe() ||
+        Math.abs(oStartTouch.screenY() - _iScreenY) > $.jGestures.defaults().thresholdSwipe()
+      ) ? true : false;
 
-    // if the current change on the x/y position is above the defined threshold for moving an element set the moved flag
-    // to distinguish between a moving gesture and a shaking finger trying to tap
-    var _bHasMoved = (
-      Math.abs(_oDatajQueryGestures.oStartTouch.screenX - _iScreenX) > $.jGestures.defaults.thresholdMove ||
-      Math.abs(_oDatajQueryGestures.oStartTouch.screenY - _iScreenY) > $.jGestures.defaults.thresholdMove
-    ) ? true : false;
+   // ---
+      // String _sType;
+      Move _oEventData ;
 
-    // if the current change on the x/y position is above the defined threshold for swiping set the moved flag
-    // to indicate we're dealing with a swipe gesture
-    var _bHasSwipeGesture = (
-      Math.abs(_oDatajQueryGestures.oStartTouch.screenX - _iScreenX) > $.jGestures.defaults.thresholdSwipe ||
-      Math.abs(_oDatajQueryGestures.oStartTouch.screenY - _iScreenY) > $.jGestures.defaults.thresholdSwipe
-    ) ? true : false;
+      Delta _oDelta;
 
- // ---
-    var _sType;
-    var _oEventData ;
-
-    var _oDelta;
-
-    // calculate distances in relation to the touchstart position not the last touchmove event!
-    var _iDeltaX;
-    var _iDeltaY;
-    var _oDetails;
-
-    var _aDict = ["zero","one","two","three","four"];
-
-    // swipe marker
-    var _bIsSwipe;
-
-
-    // trigger events for all bound pseudo events on this element
-    for (_sType in _oDatajQueryGestures) {
-// ...
-      // get current pseudo event
-      _oEventData = _oDatajQueryGestures.oStartTouch;
-
-      _oDelta = {};
-      _iScreenX = (_bHasTouches) ? event_.changedTouches[0].screenX : event_.screenX;
-      _iScreenY = (_bHasTouches) ? event_.changedTouches[0].screenY : event_.screenY;
       // calculate distances in relation to the touchstart position not the last touchmove event!
-      _iDeltaX = _iScreenX - _oEventData.screenX ;
-      _iDeltaY = _iScreenY - _oEventData.screenY;
-      _oDetails = _createOptions({type: "swipe", touches: _iTouches, screenY: _iScreenY,screenX:_iScreenX ,deltaY: _iDeltaY,deltaX : _iDeltaX, startMove:_oEventData, event:event_, timestamp:  _oEventData.timestamp });
+      int _iDeltaX;
+      int _iDeltaY;
+      Options _oDetails;
 
+      String[] _aDict = new String[]{"","one","two","three","four"};
 
       // swipe marker
-      _bIsSwipe = false;
+      boolean _bIsSwipe;
 
-      // trigger bound events on this element
-      switch(_sType) {
-        case "swipeone":
-        case "swipetwo":
-        case "swipethree":
-        case "swipefour":
-        case "swipeup":
-        case "swiperightup":
-        case "swiperight":
-        case "swiperightdown":
-        case "swipedown":
-        case "swipeleftdown":
-        case "swipeleft":
-        case "swipeleftup":
 
-          if( _bHasTouches === false && _iTouches >= 1 && _bHasMoved === false){
-            // trigger tap!
-            break;
-          }
-          if (_bHasTouches===false || ( _iTouches >= 1  && _bHasMoved === true && _bHasSwipeGesture===true)) {
-            _bIsSwipe = true;
+      // trigger events for all bound pseudo events on this element
+      for (String _sType : _oDatajQueryGestures.keys()) {
+     // ...
+        // get current pseudo event
+        _oEventData = oStartTouch;
 
-            // trigger simple swipe
-            _oDetails.type = ["swipe",_aDict[_iTouches]].join('');
+        _oDelta = GQ.create(Delta.class);
+        _iScreenX = (_bHasTouches) ? event_.changedTouches().get(0).screenX() : event_.screenX();
+        _iScreenY = (_bHasTouches) ? event_.changedTouches().get(0).screenY() : event_.screenY();
+        // calculate distances in relation to the touchstart position not the last touchmove event!
+        _iDeltaX = _iScreenX - _oEventData.screenX() ;
+        _iDeltaY = _iScreenY - _oEventData.screenY();
+        _oDetails = _createOptions(GQ.create(OptArgs.class).type("swipe").touches(_iTouches).screenY(_iScreenY).screenX(_iScreenX).deltaY(_iDeltaY).deltaX(_iDeltaX).startMove(_oEventData).event(event_).timestamp(_oEventData.timestamp()));
 
-            if (_oDetails.type == _sType) {
-              _$element.triggerHandler(_oDetails.type,_oDetails);
+
+        // swipe marker
+        _bIsSwipe = false;
+
+        // trigger bound events on this element
+        switch(_sType) {
+          case "swipeone":
+          case "swipetwo":
+          case "swipethree":
+          case "swipefour":
+          case "swipeup":
+          case "swiperightup":
+          case "swiperight":
+          case "swiperightdown":
+          case "swipedown":
+          case "swipeleftdown":
+          case "swipeleft":
+          case "swipeleftup":
+
+            if(_bHasTouches == false && _iTouches >= 1 && _bHasMoved == false){
+              // trigger tap!
               break;
             }
+            if (_bHasTouches==false || ( _iTouches >= 1  && _bHasMoved == true && _bHasSwipeGesture==true)) {
+              _bIsSwipe = true;
 
-            // trigger directional swipe
-            if (_oDetails.direction.name !== null) {
-              _oDetails.type = "swipe" + _oDetails.direction.name;
+              // trigger simple swipe
+              _oDetails.type("swipe" + _aDict[_iTouches]);
 
-              if (_oDetails.type == _sType)
-                _$element.triggerHandler(_oDetails.type,_oDetails);
-            }
-          }
-        break;
+              if (_oDetails.type() == _sType) {
+                _$element.trigger(_oDetails.type(),_oDetails);
+                break;
+              }
 
-        case "tapone":
-        case "taptwo":
-        case "tapthree":
-        case "tapfour":
-          if (( /* _bHasTouches && */ _bHasMoved !== true && _bIsSwipe !==true) && (_aDict[_iTouches] ==_sType.slice(3)) ) {
-            _oDetails.description = ["tap",_aDict[_iTouches]].join('');
-            _oDetails.type = ["tap",_aDict[_iTouches]].join('');
+              // trigger directional swipe
+              if (_oDetails.directionName() != null) {
+                _oDetails.type("swipe" + _oDetails.directionName());
 
-            if (_oDetails.type == _sType)
-              _$element.triggerHandler(_oDetails.type,_oDetails);
+                if (_oDetails.type() == _sType)
+                  _$element.trigger(_oDetails.type(),_oDetails);
+              }
             }
           break;
 
+          case "tapone":
+          case "taptwo":
+          case "tapthree":
+          case "tapfour":
+            if (( /* _bHasTouches && */ _bRotate == false && _bHasMoved != true && _bIsSwipe != true) && (_aDict[_iTouches] == _sType.substring(3)) ) {
+              _oDetails.description("tap" + _aDict[_iTouches]);
+              _oDetails.type("tap" + _aDict[_iTouches]);
+
+              if (_oDetails.type() == _sType)
+                _$element.trigger(_oDetails.type(),_oDetails);
+            }
+            break;
+
+        }
+
+        // refresh pseudo events
+        Properties _oObj = $$();
+//        _oObj[_sType] = false;
+//        _oObj.hasTouchmoved = false;
+        _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
+
       }
-
-      // refresh pseudo events
-      var _oObj = {};
-//      _oObj[_sType] = false;
-//      _oObj.hasTouchmoved = false;
-      _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-      _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-
+      _$element.trigger($.jGestures.events().touchendProcessed(),event_);
     }
-    _$element.triggerHandler($.jGestures.events.touchendProcessed,event_);
-  }
+  };
   // _onTouchend
+
 
   function _onGesturestart(event_) {
 

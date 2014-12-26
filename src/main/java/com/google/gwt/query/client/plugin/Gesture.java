@@ -1,42 +1,43 @@
+import com.google.gwt.query.client.GQ;
+import com.google.gwt.query.client.plugin.GestureObjects.$;
+import com.google.gwt.query.client.plugin.GestureObjects.JGestures;
+import com.google.gwt.user.client.Window;
+
  (function($) {
 
-  $.jGestures = {};
-  $.jGestures.defaults = {};
-  $.jGestures.defaults.thresholdShake =  {
-    requiredShakes : 10,
-    freezeShakes: 100,
-    frontback : {
-      sensitivity: 10
-     },
-    leftright : {
-      sensitivity: 10
-    },
-    updown : {
-      sensitivity: 10
-    }
-  };
+   $.jGestures = GQ.create(JGestures.class);
+   // $.jGestures.defaults = {};
 
-  $.jGestures.defaults.thresholdPinchopen = 0.05;
-  $.jGestures.defaults.thresholdPinchmove = 0.05;
-  $.jGestures.defaults.thresholdPinch = 0.05;
-  $.jGestures.defaults.thresholdPinchclose = 0.05;
-  $.jGestures.defaults.thresholdRotatecw = 5; //deg
-  $.jGestures.defaults.thresholdRotateccw = 5; // deg
-  // a tap becomes a swipe if x/y values changes are above this threshold
-  $.jGestures.defaults.thresholdMove = 20;
-  $.jGestures.defaults.thresholdSwipe = 100;
-  // get capable user agents
-  $.jGestures.data = {};
-  $.jGestures.data.hasGestures = !!navigator.userAgent.match(/(iPad|iPhone|iPod|Mobile Safari)/);
-  $.hasGestures = $.jGestures.data.hasGestures;
-  $.jGestures.events = {
-    touchstart : 'jGestures.touchstart',
-    touchendStart: 'jGestures.touchend;start',
-    touchendProcessed: 'jGestures.touchend;processed',
-    gesturestart: 'jGestures.gesturestart',
-    gestureendStart: 'jGestures.gestureend;start',
-    gestureendProcessed: 'jGestures.gestureend;processed'
-  };
+   $.jGestures.defaults().thresholdShake()
+     .requiresShakes(10)
+     .freezeShakes(100);
+   $.jGestures.defaults().thresholdShake().frontback()
+     .sensitivity(10);
+   $.jGestures.defaults().thresholdShake().leftright()
+     .sensitivity(10);
+   $.jGestures.defaults().thresholdShake().updown()
+     .sensitivity(10);
+
+   $.jGestures.defaults().thresholdPinchopen(0.05);
+   $.jGestures.defaults().thresholdPinchmove(0.05);
+   $.jGestures.defaults().thresholdPinch(0.05);
+   $.jGestures.defaults().thresholdPinchclose(0.05);
+   $.jGestures.defaults().thresholdRotatecw(5); //deg
+   $.jGestures.defaults().thresholdRotateccw(5); // deg
+   // a tap becomes a swipe if x/y values changes are above this threshold
+   $.jGestures.defaults().thresholdMove(20);
+   $.jGestures.defaults().thresholdSwipe(100);
+   // get capable user agents
+   $.hasGestures = Window.Navigator.getUserAgent().matches(".*(iPad|iPhone|iPod|Mobile Safari).*");
+   $.jGestures.data().hasGestures($.hasGestures);
+   $.jGestures.hasGestures($.hasGestures);
+   $.jGestures.events()
+       .touchstart("jGestures.touchstart")
+       .touchendStart("jGestures.touchend;start")
+       .touchendProcessed("jGestures.touchend;processed")
+       .gesturestart("jGestures.gesturestart")
+       .gestureendStart("jGestures.gestureend;start")
+       .gestureendProcessed("jGestures.gestureend;processed");
 
   jQuery
     .each({

@@ -805,122 +805,123 @@ public class Gesture extends Events {
   };
   // _onTouchend
 
-  function _onGesturestart(event_) {
+  static Function _onGesturestart = new Function() {
+    public boolean f(Event event_) {
+      // ignore bubbled handlers
+      // if ( event_.currentTarget !== event_.target ) { return; }
+      GQuery _$element = $(event_.getCurrentEventTarget());
+      // var _$element = jQuery(event_.target);
 
-    // ignore bubbled handlers
-    // if ( event_.currentTarget !== event_.target ) { return; }
-
-    var _$element = jQuery(event_.currentTarget);
-    // var _$element = jQuery(event_.target);
-
-    // trigger custom notification
-    _$element.triggerHandler($.jGestures.events.gesturestart,event_);
+      // trigger custom notification
+      _$element.trigger($.jGestures.events().gesturestart(),event_);
 
 
-    // get stored pseudo event
-    var _oDatajQueryGestures = _$element.data("ojQueryGestures");
+      // get stored pseudo event
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
 
-    // var _oEventData = _oDatajQueryGestures[_sType];
-    // store current values for calculating relative values (changes between touchmoveevents)
-    var _oObj = {};
-    _oObj.oStartTouch = {timestamp:new Date().getTime()};
-    _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-  }
-  // _onGesturestart
-
-  function _onGesturechange(event_) {
-
-    // ignore bubbled handlers
-    // if ( event_.currentTarget !== event_.target ) { return; }
-
-    var _$element = jQuery(event_.currentTarget);
-    // var _$element = jQuery(event_.target);
-    var _iDelta,_iDirection,_sDesc,_oDetails;
-    // get all pseudo events
-    var _oDatajQueryGestures = _$element.data("ojQueryGestures");
-
-    // trigger events for all bound pseudo events on this element
-    var _sType;
-    for (_sType in _oDatajQueryGestures) {
-
-      // trigger a specific bound event
-      switch(_sType) {
-
-        case "pinch":
-          _iDelta = event_.scale;
-          if ( ( ( _iDelta < 1 ) && (_iDelta % 1) < (1 - $.jGestures.defaults.thresholdPinchclose) ) || ( ( _iDelta > 1 ) && (_iDelta % 1) > ($.jGestures.defaults.thresholdPinchopen) ) ) {
-            _iDirection = (_iDelta < 1 ) ? -1 : +1 ;
-            _oDetails = _createOptions({type: "pinch", scale: _iDelta, touches: null,startMove:_oDatajQueryGestures.oStartTouch, event:event_, timestamp: _oDatajQueryGestures.oStartTouch.timestamp, vector:_iDirection, description: ['pinch:',_iDirection,':' , ( (_iDelta < 1 ) ? "close" : "open" )].join('') });
-            _$element.triggerHandler(_oDetails.type, _oDetails);
-          }
-        break;
-
-        case "rotate":
-          _iDelta = event_.rotation;
-          if ( ( ( _iDelta < 1 ) &&  ( -1*(_iDelta) > $.jGestures.defaults.thresholdRotateccw ) ) || ( ( _iDelta > 1 ) && (_iDelta  > $.jGestures.defaults.thresholdRotatecw) ) ) {
-            _iDirection = (_iDelta < 1 ) ? -1 : +1 ;
-            _oDetails = _createOptions({type: "rotate", rotation: _iDelta, touches: null, startMove:_oDatajQueryGestures.oStartTouch, event:event_, timestamp: _oDatajQueryGestures.oStartTouch.timestamp, vector:_iDirection, description: ['rotate:',_iDirection,':' , ( (_iDelta < 1 ) ? "counterclockwise" : "clockwise" )].join('') });
-            _$element.triggerHandler(_oDetails.type, _oDetails);
-          }
-        break;
-
-      }
+      // var _oEventData = _oDatajQueryGestures[_sType];
+      // store current values for calculating relative values (changes between touchmoveevents)
+      Properties _oObj = $$();
+      _oObj.set("oStartTouch", GQ.create(Move.class).timestamp(Duration.currentTimeMillis()).getDataImpl());
+      _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
     }
-
-  }
+  };
   // _onGesturestart
 
-  function _onGestureend(event_) {
-    // ignore bubbled handlers
-    // if ( event_.currentTarget !== event_.target ) { return; }
+  static Function _onGesturechange = new Function() {
+    public boolean f(Event e) {
+      TouchEvent event_ = e.cast();
+      // ignore bubbled handlers
+      // if ( event_.currentTarget !== event_.target ) { return; }
+      GQuery _$element = $(event_.getCurrentEventTarget());
+      // var _$element = jQuery(event_.target);
+      double _iDelta; int _iDirection; String _sDesc; Options _oDetails;
+      // get all pseudo events
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
+      Move oStartTouch = GQ.create(Move.class).load(_oDatajQueryGestures.getJavaScriptObject("oStartTouch"));
 
-    var _$element = jQuery(event_.currentTarget);
-    // var _$element = jQuery(event_.target);
+      // trigger events for all bound pseudo events on this element
+      for (String _sType : _oDatajQueryGestures.keys()) {
 
-    // trigger custom notification
-    _$element.triggerHandler($.jGestures.events.gestureendStart,event_);
+        // trigger a specific bound event
+        switch(_sType) {
 
-    var _iDelta;
-    var _oDatajQueryGestures = _$element.data("ojQueryGestures");
-
-    // trigger handler for every bound event
-    var _sType;
-    for (_sType in _oDatajQueryGestures) {
-
-      switch(_sType) {
-
-        case "pinchclose":
-          _iDelta = event_.scale;
-          if (( _iDelta < 1 ) && (_iDelta % 1) < (1 - $.jGestures.defaults.thresholdPinchclose)) {
-            _$element.triggerHandler("pinchclose", _createOptions ({type: "pinchclose", scale:_iDelta, vector: -1, touches: null, startMove: _oDatajQueryGestures.oStartTouch, event:event_, timestamp:_oDatajQueryGestures.oStartTouch.timestamp,description: 'pinch:-1:close' }) );
-          }
-        break;
-
-        case "pinchopen":
-          _iDelta = event_.scale;
-          if ( ( _iDelta > 1 ) && (_iDelta % 1) > ($.jGestures.defaults.thresholdPinchopen) ) {
-            _$element.triggerHandler("pinchopen", _createOptions ({type: "pinchopen", scale:_iDelta, vector: +1, touches: null, startMove: _oDatajQueryGestures.oStartTouch, event:event_, timestamp:_oDatajQueryGestures.oStartTouch.timestamp,description: 'pinch:+1:open'}) );
-          }
-        break;
-
-        case "rotatecw":
-          _iDelta = event_.rotation;
-          if ( ( _iDelta > 1 ) && (_iDelta  > $.jGestures.defaults.thresholdRotatecw) ) {
-            _$element.triggerHandler("rotatecw", _createOptions ({type: "rotatecw", rotation:_iDelta, vector: +1, touches: null, startMove: _oDatajQueryGestures.oStartTouch, event:event_, timestamp:_oDatajQueryGestures.oStartTouch.timestamp,description: 'rotate:+1:clockwise'}) );
-          }
-        break;
-
-        case "rotateccw":
-          _iDelta = event_.rotation;
-          if ( ( _iDelta < 1 ) &&  ( -1*(_iDelta) > $.jGestures.defaults.thresholdRotateccw ) ) {
-              _$element.triggerHandler("rotateccw", _createOptions ({type: "rotateccw", rotation:_iDelta, vector: -1, touches: null, startMove: _oDatajQueryGestures.oStartTouch, event:event_, timestamp:_oDatajQueryGestures.oStartTouch.timestamp,description: 'rotate:-1:counterclockwise'}) );
+          case "pinch":
+            _iDelta = event_.scale();
+            if ( ( ( _iDelta < 1 ) && (_iDelta % 1) < (1 - $.jGestures.defaults().thresholdPinchclose()) ) || ( ( _iDelta > 1 ) && (_iDelta % 1) > ($.jGestures.defaults().thresholdPinchopen()) ) ) {
+              _iDirection = (_iDelta < 1 ) ? -1 : +1 ;
+              _oDetails = _createOptions(GQ.create(OptArgs.class).type("pinch").scale(_iDelta).startMove(oStartTouch).event(event_).timestamp(oStartTouch.timestamp()).vector(_iDirection).description("pinch:" + _iDirection + ":" + (_iDelta < 1 ? "close" : "open")));
+              _$element.trigger(_oDetails.type(), _oDetails);
             }
-        break;
+          break;
+
+          case "rotate":
+            _iDelta = event_.rotation();
+            if ( ( ( _iDelta < 1 ) &&  ( -1*(_iDelta) > $.jGestures.defaults().thresholdRotateccw() ) ) || ( ( _iDelta > 1 ) && (_iDelta  > $.jGestures.defaults().thresholdRotatecw()) ) ) {
+              _iDirection = (_iDelta < 1 ) ? -1 : +1 ;
+              _oDetails = _createOptions(GQ.create(OptArgs.class).type("rotate").rotation(_iDelta).startMove(oStartTouch).event(event_).timestamp(oStartTouch.timestamp()).vector(_iDirection).description("rotate:" + _iDirection + ":" + (_iDelta < 1 ? "counterclockwise" : "clockwise")));
+              _$element.trigger(_oDetails.type(), _oDetails);
+            }
+          break;
 
         }
       }
-      _$element.triggerHandler($.jGestures.events.gestureendProcessed,event_);
+    };
+  };
+  // _onGesturestart
+
+  static Function _onGestureend = new Function() {
+    public boolean f(Event e) {
+      TouchEvent event_ = e.cast();
+      // ignore bubbled handlers
+      // if ( event_.currentTarget !== event_.target ) { return; }
+      GQuery _$element = $(event_.getCurrentEventTarget());
+      // var _$element = jQuery(event_.target);
+      // trigger custom notification
+      _$element.trigger($.jGestures.events().gestureendStart(),event_);
+
+      double _iDelta;
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
+      Move oStartTouch = GQ.create(Move.class).load(_oDatajQueryGestures.getJavaScriptObject("oStartTouch"));
+
+      // trigger handler for every bound event
+      for (String _sType : _oDatajQueryGestures.keys()) {
+
+        switch(_sType) {
+
+          case "pinchclose":
+            _iDelta = event_.scale();
+            if (( _iDelta < 1 ) && (_iDelta % 1) < (1 - $.jGestures.defaults().thresholdPinchclose())) {
+              _$element.trigger("pinchclose", _createOptions (GQ.create(OptArgs.class).type("pinchclose").scale(_iDelta).vector(-1).startMove(oStartTouch).event(event_).timestamp(oStartTouch.timestamp()).description("pinch:-1:close")));
+            }
+          break;
+
+          case "pinchopen":
+            _iDelta = event_.scale();
+            if ( ( _iDelta > 1 ) && (_iDelta % 1) > ($.jGestures.defaults().thresholdPinchopen())) {
+              _$element.trigger("pinchopen", _createOptions (GQ.create(OptArgs.class).type("pinchopen").scale(_iDelta).vector(+1).startMove(oStartTouch).event(event_).timestamp(oStartTouch.timestamp()).description("pinch:+1:open")));
+            }
+          break;
+
+          case "rotatecw":
+            _iDelta = event_.rotation();
+            if ( ( _iDelta > 1 ) && (_iDelta  > $.jGestures.defaults().thresholdRotatecw()) ) {
+              _$element.trigger("rotatecw", _createOptions (GQ.create(OptArgs.class).type("rotatecw").rotation(_iDelta).vector(+1).startMove(oStartTouch).event(event_).timestamp(oStartTouch.timestamp()).description("rotate:+1:clockwise")));
+            }
+          break;
+
+          case "rotateccw":
+            _iDelta = event_.rotation();
+            if ( ( _iDelta < 1 ) &&  ( -1*(_iDelta) > $.jGestures.defaults().thresholdRotateccw()) ) {
+              _$element.trigger("rotateccw", _createOptions (GQ.create(OptArgs.class).type("rotateccw").rotation(_iDelta).vector(+1).startMove(oStartTouch).event(event_).timestamp(oStartTouch.timestamp()).description("rotate:-1:counterclockwise")));
+              }
+          break;
+
+        }
+      }
+      _$element.trigger($.jGestures.events().gestureendProcessed(),event_);
     }
+  };
   // _onGestureend
   }
 )(jQuery);

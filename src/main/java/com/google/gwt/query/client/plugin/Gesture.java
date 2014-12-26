@@ -1,363 +1,363 @@
- (function($) {
+public class Gesture extends Events {
+  static {
+    $.jGestures = GQ.create(JGestures.class);
+    // $.jGestures.defaults = {};
+    $.jGestures.defaults().thresholdShake()
+      .requiresShakes(10)
+      .freezeShakes(100);
+    $.jGestures.defaults().thresholdShake()
+      .frontback()
+        .sensitivity(10);
+    $.jGestures.defaults().thresholdShake()
+      .leftright()
+        .sensitivity(10);
+    $.jGestures.defaults().thresholdShake()
+      .updown()
+        .sensitivity(10);
 
-  $.jGestures = {};
-  $.jGestures.defaults = {};
-  $.jGestures.defaults.thresholdShake =  {
-    requiredShakes : 10,
-    freezeShakes: 100,
-    frontback : {
-      sensitivity: 10
-     },
-    leftright : {
-      sensitivity: 10
-    },
-    updown : {
-      sensitivity: 10
+
+    $.jGestures.defaults().thresholdPinchopen(0.05);
+    $.jGestures.defaults().thresholdPinchmove(0.05);
+    $.jGestures.defaults().thresholdPinch(0.05);
+    $.jGestures.defaults().thresholdPinchclose(0.05);
+    $.jGestures.defaults().thresholdRotatecw(5); //deg
+    $.jGestures.defaults().thresholdRotateccw(5); // deg
+    // a tap becomes a swipe if x/y values changes are above this threshold
+    $.jGestures.defaults().thresholdMove(20);
+    $.jGestures.defaults().thresholdSwipe(100);
+    // get capable user agents
+    $.hasGestures = Window.Navigator.getUserAgent().matches(".*(iPad|iPhone|iPod|Mobile Safari).*");
+    $.jGestures.data().hasGestures($.hasGestures);
+    $.jGestures.hasGestures($.hasGestures);
+    $.jGestures.events()
+        .touchstart("jGestures.touchstart")
+        .touchendStart("jGestures.touchend;start")
+        .touchendProcessed("jGestures.touchend;processed")
+        .gesturestart("jGestures.gesturestart")
+        .gestureendStart("jGestures.gestureend;start")
+        .gestureendProcessed("jGestures.gestureend;processed");
+
+
+
+
+    // "first domevent necessary"_"touch event+counter" : "exposed as"
+    // event: orientationchange
+    $.special.put("orientationchange_orientationchange01", "orientationchange");
+    // event: gestures
+    $.special.put("gestureend_pinchopen01", "pinchopen");
+    $.special.put("gestureend_pinchclose01", "pinchclose");
+    $.special.put("gestureend_rotatecw01", "rotatecw");
+    $.special.put("gestureend_rotateccw01", "rotateccw");
+    // move events
+    $.special.put("gesturechange_pinch01", "pinch");
+    $.special.put("gesturechange_rotate01", "rotate");
+    $.special.put("touchstart_swipe13", "swipemove");
+    // event: touches
+    $.special.put("touchstart_swipe01", "swipeone");
+    $.special.put("touchstart_swipe02", "swipetwo");
+    $.special.put("touchstart_swipe03", "swipethree");
+    $.special.put("touchstart_swipe04", "swipefour");
+    $.special.put("touchstart_swipe05", "swipeup");
+    $.special.put("touchstart_swipe06", "swiperightup");
+    $.special.put("touchstart_swipe07", "swiperight");
+    $.special.put("touchstart_swipe08", "swiperightdown");
+    $.special.put("touchstart_swipe09", "swipedown");
+    $.special.put("touchstart_swipe10", "swipeleftdown");
+    $.special.put("touchstart_swipe11", "swipeleft");
+    $.special.put("touchstart_swipe12", "swipeleftup");
+    $.special.put("touchstart_tap01", "tapone");
+    $.special.put("touchstart_tap02", "taptwo");
+    $.special.put("touchstart_tap03", "tapthree");
+    $.special.put("touchstart_tap04", "tapfour");
+
+    $.special.put("devicemotion_shake01", "shake");
+    $.special.put("devicemotion_shake02", "shakefrontback");
+    $.special.put("devicemotion_shake03", "shakeleftright");
+    $.special.put("devicemotion_shake04", "shakeupdown");
+
+    for (Entry<String, String> e : $.special.entrySet())
+      EventsListener.special.put(e.getValue(), new GestureSpecialEvent(e.getKey(), e.getValue()));
+  }
+  public static class GestureSpecialEvent implements SpecialEvent {
+    final String sInternal_, sPublicFN_;
+
+    public GestureSpecialEvent(String internalEventName, String publicEventName) {
+      sInternal_ = internalEventName; sPublicFN_ = publicEventName;
     }
-  };
 
-  $.jGestures.defaults.thresholdPinchopen = 0.05;
-  $.jGestures.defaults.thresholdPinchmove = 0.05;
-  $.jGestures.defaults.thresholdPinch = 0.05;
-  $.jGestures.defaults.thresholdPinchclose = 0.05;
-  $.jGestures.defaults.thresholdRotatecw = 5; //deg
-  $.jGestures.defaults.thresholdRotateccw = 5; // deg
-  // a tap becomes a swipe if x/y values changes are above this threshold
-  $.jGestures.defaults.thresholdMove = 20;
-  $.jGestures.defaults.thresholdSwipe = 100;
-  // get capable user agents
-  $.jGestures.data = {};
-  $.jGestures.data.hasGestures = !!navigator.userAgent.match(/(iPad|iPhone|iPod|Mobile Safari)/);
-  $.hasGestures = $.jGestures.data.hasGestures;
-  $.jGestures.events = {
-    touchstart : 'jGestures.touchstart',
-    touchendStart: 'jGestures.touchend;start',
-    touchendProcessed: 'jGestures.touchend;processed',
-    gesturestart: 'jGestures.gesturestart',
-    gestureendStart: 'jGestures.gestureend;start',
-    gestureendProcessed: 'jGestures.gestureend;processed'
-  };
+    @Override public boolean setup(Element elm) {
+      // split the arguments to necessary controll arguements
+      String[] _aSplit = sInternal_.split("_");
+      String _sDOMEvent = _aSplit[0]; //
+      // get the associated gesture event and strip the counter: necessary for distinguisihng similliar events such as tapone-tapfour
+      String _sGestureEvent = _aSplit[1].substring(0, _aSplit[1].length() -2);
+      GQuery _$element = $(elm);
+      Properties _oDatajQueryGestures;
+      Properties oObj;
+      // bind the event handler on the first $.bind() for a gestureend-event, set marker
+      if (_$element.data("ojQueryGestures") == null || _$element.<Properties>data("ojQueryGestures").get(_sDOMEvent) == null)  {
+        // setup pseudo event
+        _oDatajQueryGestures = _$element.data("ojQueryGestures") != null ? _$element.<Properties>data("ojQueryGestures") : $$();
+        oObj = $$();
+        // marker for:  domEvent being set on this element
+        // e.g.: $.data.oGestureInternals["touchstart"] = true;
+        // since they're grouped, i'm just marking the first one being added
+        oObj.set(_sDOMEvent, true);
 
-  jQuery
-    .each({
-      // "first domevent necessary"_"touch event+counter" : "exposed as"
-      // event: orientationchange
-      orientationchange_orientationchange01: "orientationchange",
-      // event: gestures
-      gestureend_pinchopen01: "pinchopen",
-      gestureend_pinchclose01: "pinchclose",
-      gestureend_rotatecw01 : "rotatecw",
-      gestureend_rotateccw01 : "rotateccw",
-      // move events
-      gesturechange_pinch01: "pinch",
-      gesturechange_rotate01: "rotate",
-      touchstart_swipe13: "swipemove",
-      // event: touches
-      touchstart_swipe01: "swipeone",
-      touchstart_swipe02: "swipetwo",
-      touchstart_swipe03: "swipethree",
-      touchstart_swipe04: "swipefour",
-      touchstart_swipe05: "swipeup",
-      touchstart_swipe06: "swiperightup",
-      touchstart_swipe07: "swiperight",
-      touchstart_swipe08: "swiperightdown",
-      touchstart_swipe09: "swipedown",
-      touchstart_swipe10: "swipeleftdown",
-      touchstart_swipe11: "swipeleft",
-      touchstart_swipe12: "swipeleftup",
-      touchstart_tap01: "tapone",
-      touchstart_tap02: "taptwo",
-      touchstart_tap03: "tapthree",
-      touchstart_tap04: "tapfour",
+        $.extend(true,_oDatajQueryGestures,oObj);
+        _$element.data("ojQueryGestures" ,_oDatajQueryGestures);
+        // add gesture events
+        if($.jGestures.hasGestures()) {
+          switch(_sGestureEvent) {
+            // event: orientationchange
+            case "orientationchange":
+              _$element.on("deviceorientation", _onOrientationchange);
+            break;
+            // event:
+            // - shake
+            // - tilt
+            case "shake":
+            case "shakefrontback":
+            case "shakeleftright":
+            case "shakeupdown":
+            case "tilt":
+              //$.hasGyroscope = true //!window.DeviceOrientationEvent;
+              //_$element.get(0).addEventListener("devicemotion", _onDevicemotion, false);
+              //_$element.get(0).addEventListener("deviceorientation", _onDeviceorientation, false);
+              _$element.on("devicemotion", _onDevicemotion);
+            break;
 
-      devicemotion_shake01: "shake",
-      devicemotion_shake02: "shakefrontback",
-      devicemotion_shake03: "shakeleftright",
-      devicemotion_shake04: "shakeupdown"
+            // event:
+            // - touchstart
+            // - touchmove
+            // - touchend
+            case "tap":
+            case "swipe":
+            case "swipeup":
+            case "swiperightup":
+            case "swiperight":
+            case "swiperightdown":
+            case "swipedown":
+            case "swipeleftdown":
+            case "swipeleft":
+            case "mrotate":
+              _$element.on("touchstart", _onTouchstart);
+            break;
 
-    },
+            // event: gestureend
+            case "pinchopen":
+            case "pinchclose" :
+            case "rotatecw" :
+            case "rotateccw" :
+              _$element.on("gesturestart", _onGesturestart);
+              _$element.on("gestureend", _onGestureend);
+            break;
 
-    /**
-    * Add gesture events inside the jQuery.event.special namespace
-    */
-    function( sInternal_, sPublicFN_ ) {
-
-      // add as funciton to jQuery.event.special.sPublicFN_
-      jQuery.event.special[ sPublicFN_ ] = {
-
-        setup: function () {
-          // split the arguments to necessary controll arguements
-          var _aSplit = sInternal_.split("_");
-          var _sDOMEvent = _aSplit[0]; //
-          // get the associated gesture event and strip the counter: necessary for distinguisihng similliar events such as tapone-tapfour
-          var _sGestureEvent = _aSplit[1].slice(0,_aSplit[1].length-2);
-          var _$element = jQuery(this);
-          var _oDatajQueryGestures ;
-          var oObj;
-          // bind the event handler on the first $.bind() for a gestureend-event, set marker
-          if (!_$element.data("ojQueryGestures") || !_$element.data("ojQueryGestures")[_sDOMEvent])  {
-            // setup pseudo event
-            _oDatajQueryGestures = _$element.data("ojQueryGestures") || {};
-            oObj = {};
-            // marker for:  domEvent being set on this element
-            // e.g.: $.data.oGestureInternals["touchstart"] = true;
-            // since they're grouped, i'm just marking the first one being added
-            oObj[_sDOMEvent] = true;
-            $.extend(true,_oDatajQueryGestures,oObj);
-            _$element.data("ojQueryGestures" ,_oDatajQueryGestures);
-            // add gesture events
-            if($.hasGestures) {
-              switch(_sGestureEvent) {
-
-                // event: orientationchange
-                case "orientationchange":
-                  _$element.get(0).addEventListener("deviceorientation", _onOrientationchange, false);
-                break;
-
-                // event:
-                // - shake
-                // - tilt
-                case "shake":
-                case "shakefrontback":
-                case "shakeleftright":
-                case "shakeupdown":
-                case "tilt":
-                  //$.hasGyroscope = true //!window.DeviceOrientationEvent;
-                  //_$element.get(0).addEventListener("devicemotion", _onDevicemotion, false);
-                  //_$element.get(0).addEventListener("deviceorientation", _onDeviceorientation, false);
-                  _$element.get(0).addEventListener("devicemotion", _onDevicemotion, false);
-                break;
-
-                // event:
-                // - touchstart
-                // - touchmove
-                // - touchend
-                case "tap":
-                case "swipe":
-                case "swipeup":
-                case "swiperightup":
-                case "swiperight":
-                case "swiperightdown":
-                case "swipedown":
-                case "swipeleftdown":
-                case "swipeleft":
-                  _$element.get(0).addEventListener("touchstart", _onTouchstart, false);
-                break;
-
-                // event: gestureend
-                case "pinchopen":
-                case "pinchclose" :
-                case "rotatecw" :
-                case "rotateccw" :
-                  _$element.get(0).addEventListener("gesturestart", _onGesturestart, false);
-                  _$element.get(0).addEventListener("gestureend", _onGestureend, false);
-                break;
-
-                // event: gesturechange
-                case "pinch":
-                case "rotate":
-                  _$element.get(0).addEventListener("gesturestart", _onGesturestart, false);
-                  _$element.get(0).addEventListener("gesturechange", _onGesturechange, false);
-                break;
-              }
-            }
-            // create substitute for gesture events
-            else {
-              switch(_sGestureEvent) {
-                // event substitutes:
-                // - touchstart: mousedown
-                // - touchmove: none
-                // - touchend: mouseup
-                case "tap":
-                case "swipe":
-                  // _$element.get(0).addEventListener("mousedown", _onTouchstart, false);
-                   _$element.bind("mousedown", _onTouchstart);
-                break;
-
-                // no substitution
-                case "orientationchange":
-                case "pinchopen":
-                case "pinchclose" :
-                case "rotatecw" :
-                case "rotateccw" :
-                case "pinch":
-                case "rotate":
-                case "shake":
-                case "tilt":
-
-                break;
-              }
-            }
-
+            // event: gesturechange
+            case "pinch":
+            case "rotate":
+              _$element.on("gesturestart", _onGesturestart);
+              _$element.on("gesturechange", _onGesturechange);
+            break;
           }
-          return false;
-        },
+        }
+        // create substitute for gesture events
+        else {
+          switch(_sGestureEvent) {
+            // event substitutes:
+            // - touchstart: mousedown
+            // - touchmove: none
+            // - touchend: mouseup
+            case "tap":
+            case "swipe":
+            case "mrotate":
+              // _$element.get(0).addEventListener("mousedown", _onTouchstart, false);
+              _$element.bind("contextmenu", _onTouchstart);
+              _$element.bind("mousedown", _onTouchstart);
+            break;
 
-        add : function(event_) {
-          // add pseudo event: properties on $.data
-          var _$element = jQuery(this);
-          var _oDatajQueryGestures = _$element.data("ojQueryGestures");
-//          _oDatajQueryGestures[event_.type] = { "originalType" : event_.type , "threshold" : event_.data.threshold, "preventDefault" : event_.data.preventDefault } ;
-          _oDatajQueryGestures[event_.type] = { "originalType" : event_.type } ;
-          return false;
-        },
-
-        remove : function(event_) {
-          // remove pseudo event: properties on $.data
-          var _$element = jQuery(this);
-          var _oDatajQueryGestures = _$element.data("ojQueryGestures");
-          _oDatajQueryGestures[event_.type] = false;
-          _$element.data("ojQueryGestures" ,_oDatajQueryGestures );
-          return false;
-        },
-
-        // @TODO: maybe rework teardown to work with event type?!
-        teardown : function() {
-          // split the arguments to necessary controll arguements
-          var _aSplit = sInternal_.split("_");
-          var _sDOMEvent = _aSplit[0]; //
-          // get the associated gesture event and strip the counter: necessary for distinguisihng similliar events such as tapone-tapfour
-          var _sGestureEvent = _aSplit[1].slice(0,_aSplit[1].length-2);
-          var _$element = jQuery(this);
-          var _oDatajQueryGestures;
-          var oObj;
-          // bind the event handler on the first $.bind() for a gestureend-event, set marker
-          if (!_$element.data("ojQueryGestures") || !_$element.data("ojQueryGestures")[_sDOMEvent])  {
-            // setup pseudo event
-            _oDatajQueryGestures = _$element.data("ojQueryGestures") || {};
-            oObj = {};
-            // remove marker for:  domEvent being set on this element
-            oObj[_sDOMEvent] = false;
-            $.extend(true,_oDatajQueryGestures,oObj);
-            _$element.data("ojQueryGestures" ,_oDatajQueryGestures);
-
-            // remove gesture events
-            if($.hasGestures) {
-              switch(_sGestureEvent) {
-
-                // event: orientationchange
-                case "orientationchange":
-                  _$element.get(0).removeEventListener("orientationchange", _onOrientationchange, false);
-                break;
-
-                case "shake":
-                case "shakefrontback":
-                case "shakeleftright":
-                case "shakeupdown":
-                case "tilt":
-                  _$element.get(0).removeEventListener("devicemotion", _onDevicemotion, false);
-                break;
-
-                // event :
-                // - touchstart
-                // - touchmove
-                // - touchend
-                case "tap":
-                case "swipe":
-                case "swipeup":
-                case "swiperightup":
-                case "swiperight":
-                case "swiperightdown":
-                case "swipedown":
-                case "swipeleftdown":
-                case "swipeleft":
-                case "swipeleftup":
-                  _$element.get(0).removeEventListener("touchstart", _onTouchstart, false);
-                  _$element.get(0).removeEventListener("touchmove", _onTouchmove, false);
-                  _$element.get(0).removeEventListener("touchend", _onTouchend, false);
-                break;
-
-                // event: gestureend
-                case "pinchopen":
-                case "pinchclose" :
-                case "rotatecw" :
-                case "rotateccw" :
-                  _$element.get(0).removeEventListener("gesturestart", _onGesturestart, false);
-                  _$element.get(0).removeEventListener("gestureend", _onGestureend, false);
-                break;
-
-                // event: gesturechange
-                case "pinch":
-                case "rotate":
-                  _$element.get(0).removeEventListener("gesturestart", _onGesturestart, false);
-                  _$element.get(0).removeEventListener("gesturechange", _onGesturechange, false);
-                break;
-              }
-            }
-            // remove substitute for gesture events
-            else {
-              switch(_sGestureEvent) {
-                // event substitutes:
-                // - touchstart: mousedown
-                // - touchmove: none
-                // - touchend: mouseup
-                case "tap":
-                case "swipe":
-//                  _$element.get(0).removeEventListener("mousedown", _onTouchstart, false);
-//                  _$element.get(0).removeEventListener("mousemove", _onTouchmove, false);
-//                  _$element.get(0).removeEventListener("mouseup", _onTouchend, false);
-                  _$element.unbind("mousedown", _onTouchstart);
-                  _$element.unbind("mousemove", _onTouchmove);
-                  _$element.unbind("mouseup", _onTouchend);
-                break;
-
-                // no substitution
-                case "orientationchange":
-                case "pinchopen":
-                case "pinchclose" :
-                case "rotatecw" :
-                case "rotateccw" :
-                case "pinch":
-                case "rotate":
-                case "shake":
-                case "tilt":
-
-                break;
-              }
-            }
-
+            // no substitution
+            case "orientationchange":
+            case "pinchopen":
+            case "pinchclose" :
+            case "rotatecw" :
+            case "rotateccw" :
+            case "pinch":
+            case "rotate":
+            case "shake":
+            case "tilt":
+            break;
           }
-        return false;
+        }
+      }
+      return false;
+    }
+
+    @Override public void add(Element elm, String eventType, String nameSpace, Object data, Function f) {
+      // add pseudo event: properties on $.data
+      GQuery _$element = $(elm);
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
+
+      _oDatajQueryGestures.set(eventType, $$().set("originalType", eventType));
+
+    }
+
+    @Override public void remove(Element elm, String eventType, String nameSpace, Function f) {
+      // remove pseudo event: properties on $.data
+      GQuery _$element = $(elm);
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
+      _oDatajQueryGestures.remove(eventType);
+      _$element.data("ojQueryGestures" , _oDatajQueryGestures );
+
+    }
+
+    // TODO: maybe rework teardown to work with event type?!
+    @Override public boolean tearDown(Element elm) {
+      // split the arguments to necessary controll arguements
+      String[] _aSplit = sInternal_.split("_");
+      String _sDOMEvent = _aSplit[0]; //
+      // get the associated gesture event and strip the counter: necessary for distinguisihng similliar events such as tapone-tapfour
+      String _sGestureEvent = _aSplit[1].substring(_aSplit[1].length() -2);
+      GQuery _$element = $(elm);
+      Properties _oDatajQueryGestures;
+      Properties oObj;
+      // bind the event handler on the first $.bind() for a gestureend-event, set marker
+      if (_$element.data("ojQueryGestures") == null || _$element.<Properties>data("ojQueryGestures").get(_sDOMEvent) == null)  {
+        // setup pseudo event
+        _oDatajQueryGestures = _$element.data("ojQueryGestures") != null ? _$element.<Properties>data("ojQueryGestures") : $$();
+        oObj = $$();
+        // remove marker for:  domEvent being set on this element
+        oObj.remove(_sDOMEvent);
+        $.extend(true,_oDatajQueryGestures,oObj);
+        _$element.data("ojQueryGestures" ,_oDatajQueryGestures);
+
+        // remove gesture events
+        if($.jGestures.hasGestures()) {
+          switch(_sGestureEvent) {
+
+            // event: orientationchange
+            case "orientationchange":
+              _$element.off("deviceorientation", _onOrientationchange);
+            break;
+
+            case "shake":
+            case "shakefrontback":
+            case "shakeleftright":
+            case "shakeupdown":
+            case "tilt":
+              _$element.off("devicemotion", _onDevicemotion);
+            break;
+
+            // event:
+            // - touchstart
+            // - touchmove
+            // - touchend
+            case "tap":
+            case "swipe":
+            case "swipeup":
+            case "swiperightup":
+            case "swiperight":
+            case "swiperightdown":
+            case "swipedown":
+            case "swipeleftdown":
+            case "swipeleft":
+            case "mrotate":
+              _$element.off("touchstart", _onTouchstart);
+              _$element.off("touchmove", _onTouchmove);
+              _$element.off("touchend", _onTouchend);
+            break;
+
+            // event: gestureend
+            case "pinchopen":
+            case "pinchclose" :
+            case "rotatecw" :
+            case "rotateccw" :
+              _$element.off("gesturestart", _onGesturestart);
+              _$element.off("gestureend", _onGestureend);
+            break;
+
+            // event: gesturechange
+            case "pinch":
+            case "rotate":
+              _$element.off("gesturestart", _onGesturestart);
+              _$element.off("gesturechange", _onGesturechange);
+            break;
+          }
+        }
+        // create substitute for gesture events
+        else {
+          switch(_sGestureEvent) {
+            // event substitutes:
+            // - touchstart: mousedown
+            // - touchmove: none
+            // - touchend: mouseup
+            case "tap":
+            case "swipe":
+
+
+               _$element.unbind("mousedown", _onTouchstart);
+               _$element.unbind("mousemove", _onTouchstart);
+               _$element.unbind("mouseup", _onTouchstart);
+               _$element.unbind("contextmenu", _onTouchstart);
+            break;
+
+            // no substitution
+            case "orientationchange":
+            case "pinchopen":
+            case "pinchclose" :
+            case "rotatecw" :
+            case "rotateccw" :
+            case "pinch":
+            case "rotate":
+            case "shake":
+            case "tilt":
+
+            break;
+          }
         }
 
-      };
-    });
+      }
+      return false;
+    }
 
-  function _createOptions(oOptions_) {
-    // force properties
-    oOptions_.startMove = (oOptions_.startMove) ? oOptions_.startMove : {startX: null,startY:null,timestamp:null}  ;
-    var _iNow = new Date().getTime();
-    var _oDirection;
-    var _oDelta;
+    @Override public boolean hasHandlers(Element e) { return false; }
+  }
+
+  static Options _createOptions(OptArgs oOptions_) {
+
+    Options rOptions = GQ.create(Options.class);
+    long _iNow = new Date().getTime();
+    List<Direction> _oDirection = new ArrayList<Direction>(rOptions.direction());
+    List<Delta> _oDelta = new ArrayList<Delta>(rOptions.delta());
     // calculate touch differences
-    if (oOptions_.touches) {
+    if (oOptions_.touches() > 0) {
       // store delta values
-      _oDelta = [
-        {
-          lastX: oOptions_.deltaX ,
-          lastY: oOptions_.deltaY,
-          moved: null,
-          startX:  oOptions_.screenX - oOptions_.startMove.screenX ,
-          startY: oOptions_.screenY - oOptions_.startMove.screenY
-        }
-      ];
+      _oDelta.add(
+        GQ.create(Delta.class)
+          .lastX(oOptions_.deltaX())
+          .lastY(oOptions_.deltaY())
+          .moved(0)
+          .startX(oOptions_.screenX()- oOptions_.startMove().screenX())
+          .startY(oOptions_.screenY()- oOptions_.startMove().screenY())
+          );
 
-      _oDirection =  {
-        vector: oOptions_.vector || null,
-        orientation : window.orientation || null,
-        lastX : ((_oDelta[0].lastX > 0) ? +1 : ( (_oDelta[0].lastX < 0) ? -1 : 0 ) ),
-        lastY : ((_oDelta[0].lastY > 0) ? +1 : ( (_oDelta[0].lastY < 0) ? -1 : 0 ) ),
-        startX : ((_oDelta[0].startX > 0) ? +1 : ( (_oDelta[0].startX < 0) ? -1 : 0 ) ),
-        startY : ((_oDelta[0].startY > 0) ? +1 : ( (_oDelta[0].startY < 0) ? -1 : 0 ) )
-      };
+
+      _oDirection.add(GQ.create(Direction.class)
+          .vector(oOptions_.vector())
+          .orientiation(_window.orientation())
+          .lastX(((_oDelta.get(0).lastX() > 0) ? +1 : ( (_oDelta.get(0).lastX() < 0) ? -1 : 0 ) ))
+          .lastY(((_oDelta.get(0).lastY() > 0) ? +1 : ( (_oDelta.get(0).lastY() < 0) ? -1 : 0 ) ))
+          .startX(((_oDelta.get(0).startX() > 0) ? +1 : ( (_oDelta.get(0).startX() < 0) ? -1 : 0 )))
+          .startY(((_oDelta.get(0).startY() > 0) ? +1 : ( (_oDelta.get(0).startY() < 0) ? -1 : 0 )))
+       );
 
       // calculate distance traveled using the pythagorean theorem
-      _oDelta[0].moved =  Math.sqrt(Math.pow(Math.abs(_oDelta[0].startX), 2) + Math.pow(Math.abs(_oDelta[0].startY), 2));
+      _oDelta.get(0).moved(Math.sqrt(Math.pow(Math.abs(_oDelta.get(0).startX()), 2) + Math.pow(Math.abs(_oDelta.get(0).startY()), 2)));
 
       // determine direction name
-      var x = _oDelta[0].lastX,
-          y = _oDelta[0].lastY;
-          direction = null;
+      double x = _oDelta.get(0).lastX(),
+             y = _oDelta.get(0).lastY();
+      String direction = null;
 
       if (x == 0 || y/x <= -2 || y/x >= 2) {
         if (y > 0)
@@ -384,275 +384,275 @@
           direction = "rightup";
       }
 
-      _oDirection.name = direction;
+      rOptions.directionName(direction);
     }
-    return {
-      type: oOptions_.type || null,
-      originalEvent: oOptions_.event || null,
-      delta : _oDelta  || null,
-      direction : _oDirection || { orientation : window.orientation || null, vector: oOptions_.vector || null},
-      duration: (oOptions_.duration) ? oOptions_.duration : ( oOptions_.startMove.timestamp ) ? _iNow - oOptions_.timestamp : null,
-      rotation: oOptions_.rotation || null,
-      scale: oOptions_.scale || null,
-      description : oOptions_.description || [
-        oOptions_.type,
-        ':',
-        oOptions_.touches,
-        ':',
-        ((_oDelta[0].lastX != 0) ? ((_oDelta[0].lastX > 0) ? "right" : "left") : "steady"),
-        ':',
-        ((_oDelta[0].lastY != 0) ? ( (_oDelta[0].lastY > 0) ? "down" : "up") :"steady")
-        ].join('')
-    };
+    return rOptions
+        .type(oOptions_.type())
+//        .originalEvent(oOptions_.event())
+        .delta(_oDelta)
+        .direction(_oDirection)
+        .duration(oOptions_.duration() > 0 ? oOptions_.duration() : oOptions_.startMove().timestamp() > 0 ? _iNow - oOptions_.timestamp() : 0)
+        .rotation(oOptions_.rotation())
+        .scale(oOptions_.scale())
+        .description(oOptions_.description() != null ? oOptions_.description() : (
+            oOptions_.type() +
+            ":" +
+            oOptions_.touches() +
+            ":" +
+            (_oDelta.get(0).lastX() != 0 ? (_oDelta.get(0).lastX() > 0 ? "right" : "left") : "steady") +
+            ":" +
+            (_oDelta.get(0).lastY() != 0 ? (_oDelta.get(0).lastY() > 0 ? "down" : "up") : "steady")
+           )
+         );
 
   }
   // _createOptions
 
-  function _onOrientationchange(event_) {
+  static Function _onOrientationchange = new Function() {
+    public boolean f(Event event_) {
+      // window.orientation: -90,0,90,180
+      private String[] _aDict = new String[] {"landscape:clockwise:","portrait:default:","landscape:counterclockwise:","portrait:upsidedown:"};
 
-    // window.orientation: -90,0,90,180
-    var _aDict = ['landscape:clockwise:','portrait:default:','landscape:counterclockwise:','portrait:upsidedown:'];
+      $(window).trigger("orientationchange",
+          _createOptions(GQ.create(OptArgs.class)
+            .direction(_window.orientation())
+            .description(
+                "orientiationchange:" +
+                    _aDict[(_window.orientation()/90) + 1] +
+                    _window.orientation())));
 
-    $(window).triggerHandler("orientationchange",
-      {
-        direction : {orientation: window.orientation},
-        description : [
-          'orientationchange:',
-          _aDict[( (window.orientation / 90) +1)],
-          window.orientation
-          ].join('')
-      });
-  }
+    };
+  };
   // _onOrientationchange
 
-  function _onDevicemotion(event_) {
+  static Function _onDevicemotion = new Function() {
+    public boolean f(Event e) {
+      TouchEvent event_ = e.cast();
+//      String _sType;
+      GQuery _$element = $(window);
+      //var _bHasGyroscope = $.hasGyroscope;
+      // skip custom notification: devicemotion is triggered every 0.05s regardlesse of any gesture
 
-    var _sType;
-    var _$element = jQuery(window);
-    //var _bHasGyroscope = $.hasGyroscope;
+      // get options
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
 
-    // skip custom notification: devicemotion is triggered every 0.05s regardlesse of any gesture
+      ThresholdShake _oThreshold = $.jGestures.defaults().thresholdShake();
 
-    // get options
-    var _oDatajQueryGestures = _$element.data("ojQueryGestures");
+      // get last position or set initital values
+      DevicePosition _oLastDevicePosition = _oDatajQueryGestures.get("oDeviceMotionLastDevicePosition");
+      if (_oLastDevicePosition == null) _oLastDevicePosition = GQ.create(DevicePosition.class);
+//      accelerationIncludingGravity : {
+//        x: 0,
+//        y: 0,
+//        z: 0
+//      },
+//      shake : {
+//        eventCount: 0,
+//        intervalsPassed: 0,
+//        intervalsFreeze: 0
+//      },
+//      shakeleftright : {
+//        eventCount: 0,
+//        intervalsPassed: 0,
+//        intervalsFreeze: 0
+//      },
+//      shakefrontback : {
+//        eventCount: 0,
+//        intervalsPassed: 0,
+//        intervalsFreeze: 0
+//      },
+//      shakeupdown : {
+//        eventCount: 0,
+//        intervalsPassed: 0,
+//        intervalsFreeze: 0
+//      }
 
-    var _oThreshold = $.jGestures.defaults.thresholdShake;
+      // cache current values
+      DevicePosition _oCurrentDevicePosition = GQ.create(DevicePosition.class);
+      _oCurrentDevicePosition.accelerationIncludingGravity()
+          .x(event_.accelerationIncludingGravity().x())
+          .y(event_.accelerationIncludingGravity().y())
+          .z(event_.accelerationIncludingGravity().z());
 
-    // get last position or set initital values
-    var _oLastDevicePosition = _oDatajQueryGestures.oDeviceMotionLastDevicePosition || {
-      accelerationIncludingGravity : {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      shake : {
-        eventCount: 0,
-        intervalsPassed: 0,
-        intervalsFreeze: 0
-      },
-      shakeleftright : {
-        eventCount: 0,
-        intervalsPassed: 0,
-        intervalsFreeze: 0
-      },
-      shakefrontback : {
-        eventCount: 0,
-        intervalsPassed: 0,
-        intervalsFreeze: 0
-      },
-      shakeupdown : {
-        eventCount: 0,
-        intervalsPassed: 0,
-        intervalsFreeze: 0
-      }
-    };
+      _oCurrentDevicePosition.shake()
+          .eventCount(_oLastDevicePosition.shake().eventCount())
+          .intervalsPassed(_oLastDevicePosition.shake().intervalsPassed())
+          .intervalsFreeze(_oLastDevicePosition.shake().intervalsFreeze());
 
-    // cache current values
-    var _oCurrentDevicePosition = {
-      accelerationIncludingGravity : {
-        x: event_.accelerationIncludingGravity.x,
-        y: event_.accelerationIncludingGravity.y,
-        z: event_.accelerationIncludingGravity.z
-      },
-      shake: {
-        eventCount: _oLastDevicePosition.shake.eventCount,
-        intervalsPassed: _oLastDevicePosition.shake.intervalsPassed,
-        intervalsFreeze: _oLastDevicePosition.shake.intervalsFreeze
-       },
-       shakeleftright: {
-        eventCount: _oLastDevicePosition.shakeleftright.eventCount,
-        intervalsPassed: _oLastDevicePosition.shakeleftright.intervalsPassed,
-        intervalsFreeze: _oLastDevicePosition.shakeleftright.intervalsFreeze
-       },
-       shakefrontback: {
-        eventCount: _oLastDevicePosition.shakefrontback.eventCount,
-        intervalsPassed: _oLastDevicePosition.shakefrontback.intervalsPassed,
-        intervalsFreeze: _oLastDevicePosition.shakefrontback.intervalsFreeze
-       },
-       shakeupdown: {
-        eventCount: _oLastDevicePosition.shakeupdown.eventCount,
-        intervalsPassed: _oLastDevicePosition.shakeupdown.intervalsPassed,
-        intervalsFreeze: _oLastDevicePosition.shakeupdown.intervalsFreeze
-       }
+      _oCurrentDevicePosition.shakeleftright()
+          .eventCount(_oLastDevicePosition.shakeleftright().eventCount())
+          .intervalsPassed(_oLastDevicePosition.shakeleftright().intervalsPassed())
+          .intervalsFreeze(_oLastDevicePosition.shakeleftright().intervalsFreeze());
 
-    };
+      _oCurrentDevicePosition.shakefrontback()
+          .eventCount(_oLastDevicePosition.shakefrontback().eventCount())
+          .intervalsPassed(_oLastDevicePosition.shakefrontback().intervalsPassed())
+          .intervalsFreeze(_oLastDevicePosition.shakefrontback().intervalsFreeze());
+
+      _oCurrentDevicePosition.shakeupdown()
+          .eventCount(_oLastDevicePosition.shakeupdown().eventCount())
+          .intervalsPassed(_oLastDevicePosition.shakeupdown().intervalsPassed())
+          .intervalsFreeze(_oLastDevicePosition.shakeupdown().intervalsFreeze());
 
 
-    // options
-    var _aType;
-    var _aDescription;
-    var _oObj;
 
 
-    // trigger events for all bound pseudo events on this element
-    for (_sType in _oDatajQueryGestures) {
-      // get current pseudo event
+
+      // options
+      JsArrayString _aType;
+      JsArrayString _aDescription;
+      Properties _oObj;
 
 
-      // trigger bound events on this element
-      switch(_sType) {
+      // trigger events for all bound pseudo events on this element
+      for (String _sType : _oDatajQueryGestures.keys()) {
+        // get current pseudo event
 
-        case "shake":
-        case "shakeleftright":
-        case "shakefrontback":
-        case "shakeupdown":
 
-          // options
-          _aType = [];
-          _aDescription = [];
+        // trigger bound events on this element
+        switch(_sType) {
 
-          _aType.push(_sType);
+          case "shake":
+          case "shakeleftright":
+          case "shakefrontback":
+          case "shakeupdown":
 
-          // freeze shake - prevent multiple shake events on one  shaking motion (user won't stop shaking immediately)
-          if (++_oCurrentDevicePosition[_sType].intervalsFreeze > _oThreshold.freezeShakes && _oCurrentDevicePosition[_sType].intervalsFreeze < (2*_oThreshold.freezeShakes) ) { break;  }
+            // options
+            _aType = JsArrayString.createArray().cast();
+            _aDescription = JsArrayString.createArray().cast();
 
-          // set control values
-          _oCurrentDevicePosition[_sType].intervalsFreeze  = 0;
-          _oCurrentDevicePosition[_sType].intervalsPassed++;
+            _aType.push(_sType);
+            // freeze shake - prevent multiple shake events on one  shaking motion (user won't stop shaking immediately)
+            Shake _oCurrentDevicePosition_sType = GQ.create(Shake.class).load(_oCurrentDevicePosition.get(_sType));
+            _oCurrentDevicePosition_sType.intervalsFreeze(1 + _oCurrentDevicePosition_sType.intervalsFreeze());
+            if (_oCurrentDevicePosition_sType.intervalsFreeze() > _oThreshold.freezeShakes() && _oCurrentDevicePosition_sType.intervalsFreeze() < (2*_oThreshold.freezeShakes()) ) { break; }
+            // set control values
+            _oCurrentDevicePosition_sType.intervalsFreeze(0);
+            _oCurrentDevicePosition_sType.intervalsPassed(1 + _oCurrentDevicePosition_sType.intervalsPassed());
 
-          // check for shaking motions: massive acceleration changes in every direction
-          if ( ( _sType === "shake" ||_sType === "shakeleftright" ) && ( _oCurrentDevicePosition.accelerationIncludingGravity.x > _oThreshold.leftright.sensitivity  || _oCurrentDevicePosition.accelerationIncludingGravity.x < (-1* _oThreshold.leftright.sensitivity) ) ) {
-            _aType.push("leftright");
-            _aType.push("x-axis");
-          }
-
-          if ( ( _sType === "shake" ||_sType === "shakefrontback" ) && (_oCurrentDevicePosition.accelerationIncludingGravity.y > _oThreshold.frontback.sensitivity  || _oCurrentDevicePosition.accelerationIncludingGravity.y < (-1 * _oThreshold.frontback.sensitivity) ) ) {
-            _aType.push("frontback");
-            _aType.push("y-axis");
-          }
-
-          if ( ( _sType === "shake" ||_sType === "shakeupdown" ) && ( _oCurrentDevicePosition.accelerationIncludingGravity.z+9.81 > _oThreshold.updown.sensitivity  || _oCurrentDevicePosition.accelerationIncludingGravity.z+9.81 < (-1 * _oThreshold.updown.sensitivity) ) ) {
-            _aType.push("updown");
-            _aType.push("z-axis");
-          }
-
-          // at least one successful shaking event
-          if (_aType.length > 1) {
-            // minimum number of shaking motions during  the defined "time" (messured by events - device event interval: 0.05s)
-            if (++_oCurrentDevicePosition[_sType].eventCount == _oThreshold.requiredShakes && (_oCurrentDevicePosition[_sType].intervalsPassed) < _oThreshold.freezeShakes ) {
-              // send event
-              _$element.triggerHandler(_sType, _createOptions ({type: _sType, description: _aType.join(':'), event:event_,duration:_oCurrentDevicePosition[_sType].intervalsPassed*5 }) );
-              // reset
-              _oCurrentDevicePosition[_sType].eventCount = 0;
-              _oCurrentDevicePosition[_sType].intervalsPassed = 0;
-              // freeze shake
-              _oCurrentDevicePosition[_sType].intervalsFreeze = _oThreshold.freezeShakes+1;
+            // check for shaking motions: massive acceleration changes in every direction
+            if ( ( _sType == "shake" ||_sType == "shakeleftright" ) && ( _oCurrentDevicePosition.accelerationIncludingGravity().x() > _oThreshold.leftright().sensitivity()  || _oCurrentDevicePosition.accelerationIncludingGravity().x() < (-1* _oThreshold.leftright().sensitivity()) ) ) {
+              _aType.push("leftright");
+              _aType.push("x-axis");
             }
-            // too slow, reset
-            else if (_oCurrentDevicePosition[_sType].eventCount == _oThreshold.requiredShakes && (_oCurrentDevicePosition[_sType].intervalsPassed) > _oThreshold.freezeShakes ) {
-              _oCurrentDevicePosition[_sType].eventCount = 0 ;
-              _oCurrentDevicePosition[_sType].intervalsPassed = 0;
+
+            if ( ( _sType == "shake" ||_sType == "shakefrontback" ) && (_oCurrentDevicePosition.accelerationIncludingGravity().y() > _oThreshold.frontback().sensitivity()  || _oCurrentDevicePosition.accelerationIncludingGravity().y() < (-1 * _oThreshold.frontback().sensitivity()) ) ) {
+              _aType.push("frontback");
+              _aType.push("y-axis");
             }
-          }
-        break;
 
+            if ( ( _sType == "shake" ||_sType == "shakeupdown" ) && ( _oCurrentDevicePosition.accelerationIncludingGravity().z()+9.81 > _oThreshold.updown().sensitivity()  || _oCurrentDevicePosition.accelerationIncludingGravity().z()+9.81 < (-1 * _oThreshold.updown().sensitivity()) ) ) {
+              _aType.push("updown");
+              _aType.push("z-axis");
+            }
+            // at least one successful shaking event
+            if (_aType.length() > 1) {
+              // minimum number of shaking motions during  the defined "time" (messured by events - device event interval: 0.05s)
+              _oCurrentDevicePosition_sType.eventCount(1 + _oCurrentDevicePosition_sType.eventCount());
+              if (_oCurrentDevicePosition_sType.eventCount() == _oThreshold.requiredShakes() && (_oCurrentDevicePosition_sType.intervalsPassed()) < _oThreshold.freezeShakes() ) {
+                // send event
+                _$element.trigger(_sType, _createOptions( GQ.create(OptArgs.class).type(_sType).description(join(_aType,":")).event(event_).duration(_oCurrentDevicePosition_sType.intervalsPassed()*5)));
+                // reset
+                _oCurrentDevicePosition_sType.eventCount(0);
+                _oCurrentDevicePosition_sType.intervalsPassed(0);
+                // freeze shake
+                _oCurrentDevicePosition_sType.intervalsFreeze(_oThreshold.freezeShakes()+1);
+              }
+              // too slow, reset
+              else if (_oCurrentDevicePosition_sType.eventCount() == _oThreshold.requiredShakes() && _oCurrentDevicePosition_sType.intervalsPassed() > _oThreshold.freezeShakes() ) {
+                _oCurrentDevicePosition_sType.eventCount(0);
+                _oCurrentDevicePosition_sType.intervalsPassed(0);
+              }
+            }
+          break;
+
+        }
+
+        // refresh pseudo events
+        _oObj = $$();
+        _oObj.set("oDeviceMotionLastDevicePosition", _oCurrentDevicePosition);
+        _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
       }
-
-      // refresh pseudo events
-      _oObj = {};
-      _oObj.oDeviceMotionLastDevicePosition = _oCurrentDevicePosition;
-      _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-
     }
-  }
+  };
   // _onDevicemotion
 
-  function _onTouchstart(event_) {
+  static Function _onTouchstart = new Function() {
+    public boolean f(Event e) {
+      TouchEvent event_ = e.cast();
+      // ignore bubbled handlers
+      // if ( event_.currentTarget !== event_.target ) { return; }
+      GQuery _$element = $(event_.getCurrentEventTarget());
+      // var _$element = jQuery(event_.target);
 
-    
-    // ignore bubbled handlers
-    // if ( event_.currentTarget !== event_.target ) { return; }
-
-    var _$element = jQuery(event_.currentTarget);
-    // var _$element = jQuery(event_.target);
-
-    // trigger custom notification
-    _$element.triggerHandler($.jGestures.events.touchstart,event_);
+      // trigger custom notification
+      _$element.trigger($.jGestures.events().touchstart(), event_, _iFingers);
 
 
-    // set the necessary touch events
-    if($.hasGestures) {
-      event_.currentTarget.addEventListener("touchmove", _onTouchmove, false);
-      event_.currentTarget.addEventListener("touchend", _onTouchend, false);
+      // set the necessary touch events
+      if($.hasGestures) {
+        listener.bind("touchmove", null, _onTouchmove);
+        listener.bind("touchend", null, _onTouchend);
+      }
+      // event substitution
+      else {
+//        event_.currentTarget.addEventListener('mousemove', _onTouchmove, false);
+//        event_.currentTarget.addEventListener('mouseup', _onTouchend, false);
+        listener.bind("mousemove", null, _onTouchmove);
+        listener.bind("mouseup", null, _onTouchend);
+      }
+
+      // get stored pseudo event
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
+
+      // var _oEventData = _oDatajQueryGestures[_sType];
+      TouchEvent _eventBase = (event_.touches().length() > 0) ? event_.touches().get(0) : event_;
+      // store current values for calculating relative values (changes between touchmoveevents)
+      Properties _oObj = $$();
+      _oObj.set("oLastSwipemove", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
+      _oObj.set("oStartTouch", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
+      // Android fix
+      int _iLastFingers = _oDatajQueryGestures.getInt("fingers");
+      int _iFingers = Math.max(event_.touches().length(), 1);
+      _iFingers = _iFingers > 1 ? _iFingers : (_iLastFingers + _iFingers);
+      _oDatajQueryGestures.setNumber("fingers", _iFingers);
+
+      _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
     }
-    // event substitution
-    else {
-//      event_.currentTarget.addEventListener("mousemove", _onTouchmove, false);
-//      event_.currentTarget.addEventListener("mouseup", _onTouchend, false);
-      _$element.bind("mousemove", _onTouchmove);
-      _$element.bind("mouseup", _onTouchend);
-    }
-
-    // get stored pseudo event
-    var _oDatajQueryGestures = _$element.data("ojQueryGestures");
-
-    // var _oEventData = _oDatajQueryGestures[_sType];
-    var _eventBase = (event_.touches) ? event_.touches[0] : event_;
-    // store current values for calculating relative values (changes between touchmoveevents)
-    var _oObj = {};
-    _oObj.oLastSwipemove = { screenX : _eventBase.screenX, screenY : _eventBase.screenY, timestamp:new Date().getTime()};
-    _oObj.oStartTouch = { screenX : _eventBase.screenX, screenY : _eventBase.screenY, timestamp:new Date().getTime()};
-
-    // Android fix
-    var _iLastFingers = _oDatajQueryGestures.fingers || 0;
-    var _iFingers = event_.touches ? event_.touches.length : 1;
-    _oDatajQueryGestures.fingers = _iFingers > 1 ? _iFingers : (_iLastFingers + _iFingers);
-
-    _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-  }
+  };
   // _onTouchstart
 
-  function _onTouchmove(event_) {
+  static Function _onTouchmove = new Function() {
+    public boolean f(Event e) {
+      TouchEvent event_ = e.cast();
+      GQuery _$element = $(event_.getCurrentEventTarget());
+      // var _$element = jQuery(event_.target);
+      // get stored pseudo event
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
 
-    var _$element = jQuery(event_.currentTarget);
-    // var _$element = jQuery(event_.target);
+      boolean _bHasTouches = event_.touches().length() > 0;
+      int _iScreenX = (_bHasTouches) ? event_.changedTouches().get(0).screenX() : event_.screenX();
+      int _iScreenY = (_bHasTouches) ? event_.changedTouches().get(0).screenY() : event_.screenY();
 
-    // get stored pseudo event
-    var _oDatajQueryGestures = _$element.data("ojQueryGestures");
-
-    var _bHasTouches = !!event_.touches;
-    var _iScreenX = (_bHasTouches) ? event_.changedTouches[0].screenX : event_.screenX;
-    var _iScreenY = (_bHasTouches) ? event_.changedTouches[0].screenY : event_.screenY;
-
-    //relative to the last event
-    var _oEventData = _oDatajQueryGestures.oLastSwipemove;
-    var _iDeltaX = _iScreenX - _oEventData.screenX   ;
-    var _iDeltaY = _iScreenY - _oEventData.screenY;
-
-    var _oDetails;
+      //relative to the last event
+      Move _oEventData = GQ.create(Move.class).load(_oDatajQueryGestures.getJavaScriptObject("oLastSwipemove"));
+      int _iDeltaX = _iScreenX - _oEventData.screenX()   ;
+      int _iDeltaY = _iScreenY - _oEventData.screenY();
+      Options _oDetails;
 
       // there's a swipemove set (not the first occurance), trigger event
-    if (!!_oDatajQueryGestures.oLastSwipemove) {
-      // check
-      _oDetails = _createOptions({type: "swipemove", touches: (_bHasTouches) ? event_.touches.length: "1", screenY: _iScreenY,screenX:_iScreenX ,deltaY: _iDeltaY,deltaX : _iDeltaX, startMove:_oEventData, event:event_, timestamp:_oEventData.timestamp});
-      _$element.triggerHandler(_oDetails.type,_oDetails);
+      if (_oDatajQueryGestures.getJavaScriptObject("oLastSwipemove") != null) {
+        // check
+          _oDetails = _createOptions(GQ.create(OptArgs.class).type("swipemove").touches(_bHasTouches ? event_.touches().length() : 1).screenX(_iScreenX).screenY(_iScreenY).deltaX(_iDeltaX).deltaY(_iDeltaY).startMove(_oEventData).event(event_).timestamp(_oEventData.timestamp()));
+         _$element.trigger(_oDetails.type(), _oDetails);
+      }
+      // store the new values
+      Properties _oObj = $$();
+      TouchEvent _eventBase = (event_.touches().length() > 0) ? event_.touches().get(0) : event_;
+      _oObj.set("oLastSwipemove", GQ.create(Move.class).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
+      _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
     }
-    // store the new values
-    var _oObj = {};
-    var _eventBase = (event_.touches) ? event_.touches[0] : event_;
-    _oObj.oLastSwipemove = { screenX : _eventBase.screenX, screenY : _eventBase.screenY, timestamp:new Date().getTime()};
-    _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-  }
+  };
   // _onTouchmove
 
   function _onTouchend(event_) {

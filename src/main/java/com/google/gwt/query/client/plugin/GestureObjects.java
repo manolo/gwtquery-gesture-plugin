@@ -1,18 +1,33 @@
 package com.google.gwt.query.client.plugin;
 
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.query.client.GQ;
 import com.google.gwt.query.client.builders.JsonBuilder;
 import com.google.gwt.user.client.Event;
 
+import java.util.HashMap;
 import java.util.List;
 
 public interface GestureObjects extends JsonBuilder {
+
+  public static class $ {
+    static JGestures jGestures = GQ.create(JGestures.class);
+    static HashMap<String, String> special = new HashMap<String, String>();
+    static boolean hasGestures = false;
+
+    static native JavaScriptObject extend(boolean deep, JavaScriptObject dest, JavaScriptObject src) /*-{
+      for (var k in src)
+        if (src.hasOwnProperty(k))
+              dest[k] = src[k];
+      return dest;
+    }-*/;
+  }
 
   public interface DeviceWindow extends JsonBuilder {
     int orientation();
   }
 
   public interface DataGestures extends JsonBuilder {
-
   }
 
   public interface JGestures extends JsonBuilder {
@@ -155,6 +170,8 @@ public interface GestureObjects extends JsonBuilder {
       OptArgs description(String s);
       Move orientiation();
       OptArgs orientiation(Move i);
+      int direction();
+      OptArgs direction(int i);
     }
     public interface Delta extends JsonBuilder {
       int lastX();

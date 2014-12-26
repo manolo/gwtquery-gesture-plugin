@@ -1,13 +1,5 @@
  (function($) {
 
-  /**
-  * General thresholds.
-  */
-  // @TODO: move to $...defaults
-  // @TODO: shake to defaults freeze etc
-  // change of x deg in y ms
-
-
   $.jGestures = {};
   $.jGestures.defaults = {};
   $.jGestures.defaults.thresholdShake =  {
@@ -35,8 +27,7 @@
   $.jGestures.defaults.thresholdSwipe = 100;
   // get capable user agents
   $.jGestures.data = {};
-  $.jGestures.data.capableDevicesInUserAgentString = ['iPad','iPhone','iPod','Mobile Safari']; // basic functionality such as swipe, pinch, rotate, tap should work on every mobile safari, e.g. GalaxyTab
-  $.jGestures.data.hasGestures = (function () { var _i; for(_i = 0; _i < $.jGestures.data.capableDevicesInUserAgentString.length; _i++ ) {  if (navigator.userAgent.indexOf($.jGestures.data.capableDevicesInUserAgentString[_i]) !== -1 ) {return true;} } return false; } )();
+  $.jGestures.data.hasGestures = !!navigator.userAgent.match(/(iPad|iPhone|iPod|Mobile Safari)/);
   $.hasGestures = $.jGestures.data.hasGestures;
   $.jGestures.events = {
     touchstart : 'jGestures.touchstart',

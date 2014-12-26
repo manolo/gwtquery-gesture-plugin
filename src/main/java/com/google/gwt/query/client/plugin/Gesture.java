@@ -85,14 +85,6 @@
       // add as funciton to jQuery.event.special.sPublicFN_
       jQuery.event.special[ sPublicFN_ ] = {
 
-        /**
-        * When the first event handler is bound, jQuery executes the setup function.
-        * This plugin just uses one eventhandler per element, regardless of the number of bound events.
-        * All Events are stored internally as properties on the dom-element using the $.data api.
-        * The setup-function adds the eventlistener, acting as a proxy function for the internal events.
-        * $.data.ojQueryGestures[_sDOMEvent ("tap") ] = {Boolean}
-        * @return {Void}
-        */
         setup: function () {
           // split the arguments to necessary controll arguements
           var _aSplit = sInternal_.split("_");
@@ -201,14 +193,6 @@
           return false;
         },
 
-        /**
-        * For every $.bind(GESTURE) the add-function will be called.
-        * Instead of binding an actual eventlister, the event is stored as $.data on the element.
-        * The handler will be triggered using $.triggerHandler(GESTURE) if the internal
-        * eventhandler (proxy being bound on setup()) detects a GESTURE event
-        * @param {Object} event_ jQuery-Event-Object being passed by $.bind()
-        * @return {Void}
-        */
         add : function(event_) {
           // add pseudo event: properties on $.data
           var _$element = jQuery(this);
@@ -218,12 +202,6 @@
           return false;
         },
 
-        /**
-        * For every $.unbind(GESTURE) the remove-function will be called.
-        * Instead of removing the actual eventlister, the event is removed from $.data on the element.
-        * @param {Object} event_ jQuery-Event-Object being passed by $.bind()
-        * @return {Void}
-        */
         remove : function(event_) {
           // remove pseudo event: properties on $.data
           var _$element = jQuery(this);
@@ -233,11 +211,6 @@
           return false;
         },
 
-        /**
-        * The last $.unbind()-call on the domElement triggers the teardown function
-        * removing the eventlistener
-        * @return {Void}
-        */
         // @TODO: maybe rework teardown to work with event type?!
         teardown : function() {
           // split the arguments to necessary controll arguements
@@ -433,6 +406,7 @@
     };
 
   }
+  // _createOptions
 
   function _onOrientationchange(event_) {
 
@@ -449,6 +423,7 @@
           ].join('')
       });
   }
+  // _onOrientationchange
 
   function _onDevicemotion(event_) {
 
@@ -600,9 +575,11 @@
 
     }
   }
+  // _onDevicemotion
 
   function _onTouchstart(event_) {
 
+    
     // ignore bubbled handlers
     // if ( event_.currentTarget !== event_.target ) { return; }
 
@@ -643,6 +620,7 @@
 
     _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
   }
+  // _onTouchstart
 
   function _onTouchmove(event_) {
 
@@ -675,6 +653,7 @@
     _oObj.oLastSwipemove = { screenX : _eventBase.screenX, screenY : _eventBase.screenY, timestamp:new Date().getTime()};
     _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
   }
+  // _onTouchmove
 
   function _onTouchend(event_) {
 
@@ -824,6 +803,7 @@
     }
     _$element.triggerHandler($.jGestures.events.touchendProcessed,event_);
   }
+  // _onTouchend
 
   function _onGesturestart(event_) {
 
@@ -846,6 +826,7 @@
     _oObj.oStartTouch = {timestamp:new Date().getTime()};
     _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
   }
+  // _onGesturestart
 
   function _onGesturechange(event_) {
 
@@ -887,6 +868,7 @@
     }
 
   }
+  // _onGesturestart
 
   function _onGestureend(event_) {
     // ignore bubbled handlers
@@ -939,5 +921,6 @@
       }
       _$element.triggerHandler($.jGestures.events.gestureendProcessed,event_);
     }
+  // _onGestureend
   }
 )(jQuery);

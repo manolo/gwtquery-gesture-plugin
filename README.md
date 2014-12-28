@@ -20,14 +20,16 @@ A gwtQuery plugin for adding gesture events.
    // Observe attribute changes in all elements matching the selector
    $(selector)
      .as(Gesture.Gesture)
-     .on("", new Function() {
-         public boolean f(List<MutationRecord> mutations) {
-           console.log(mutations.get(0).type());
+     .on("tap", new Function() {
+         public boolean f(Event ev) {
+           Options o = arguments(0);
+           console.log(o.description());
+           return true;
          }
      });
 
    ```
-3. gQuery Gesture plugin is a port of the jGesture plugin at https://jgestures.codeplex.com/
+3. gQuery Gesture plugin is a gwt port of the jGesture plugin at https://jgestures.codeplex.com/
 
 
 ## Mobile compatibility

@@ -22,6 +22,7 @@ import com.google.gwt.query.client.Function;
 import com.google.gwt.query.client.GQ;
 import com.google.gwt.query.client.GQuery;
 import com.google.gwt.query.client.Properties;
+import com.google.gwt.query.client.plugin.GestureObjects.$;
 import com.google.gwt.query.client.plugin.GestureObjects.DevicePosition;
 import com.google.gwt.query.client.plugin.GestureObjects.DeviceWindow;
 import com.google.gwt.query.client.plugin.GestureObjects.JGestures;
@@ -33,7 +34,6 @@ import com.google.gwt.query.client.plugin.GestureObjects.Options.Direction;
 import com.google.gwt.query.client.plugin.GestureObjects.Options.OptArgs;
 import com.google.gwt.query.client.plugin.GestureObjects.Options.OptArgs.Move;
 import com.google.gwt.query.client.plugin.GestureObjects.Shake;
-import com.google.gwt.query.client.plugins.Events;
 import com.google.gwt.query.client.plugins.Plugin;
 import com.google.gwt.query.client.plugins.events.EventsListener;
 import com.google.gwt.query.client.plugins.events.SpecialEvent;
@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
-import static com.google.gwt.query.client.plugin.GestureObjects.$;
 
 /**
  * Gesture plugin for touch events.
@@ -54,7 +53,7 @@ import static com.google.gwt.query.client.plugin.GestureObjects.$;
  *
  * @author Manolo Carrasco
  */
-public class Gesture extends Events {
+public class Gesture extends GQuery {
 
   private static final DeviceWindow _window;
   public static final Defaults defaults;
@@ -70,19 +69,26 @@ public class Gesture extends Events {
     super(gq);
   }
 
+  /**
+   * Add Gesture special events to GQuery. Once run this you don't have
+   * to call GQuery.as(Gesture.Gesture) anymore.
+   */
+  public static void load() {
+  }
+
   static {
     $.jGestures = GQ.create(JGestures.class);
     // $.jGestures.defaults = {};
 
     $.jGestures.defaults().thresholdShake()
-      .requiresShakes(10)
-      .freezeShakes(100);
+      .requiredShakes(3) //5
+      .freezeShakes(10); //50
     $.jGestures.defaults().thresholdShake().frontback()
       .sensitivity(10);
     $.jGestures.defaults().thresholdShake().leftright()
       .sensitivity(10);
     $.jGestures.defaults().thresholdShake().updown()
-      .sensitivity(10);
+      .sensitivity(8); // 10
 
     $.jGestures.defaults().thresholdPinchopen(0.05);
     $.jGestures.defaults().thresholdPinchmove(0.05);
@@ -92,7 +98,7 @@ public class Gesture extends Events {
     $.jGestures.defaults().thresholdRotateccw(5); // deg
     // a tap becomes a swipe if x/y values changes are above this threshold
     $.jGestures.defaults().thresholdMove(20);
-    $.jGestures.defaults().thresholdSwipe(100);
+    $.jGestures.defaults().thresholdSwipe(60);
     // get capable user agents
     $.hasGestures = Window.Navigator.getUserAgent().matches(".*(iPad|iPhone|iPod|Mobile Safari).*");
     $.jGestures.data().hasGestures($.hasGestures);
@@ -188,7 +194,8 @@ public class Gesture extends Events {
           switch(_sGestureEvent) {
             // event: orientationchange
             case "orientationchange":
-              _$element.on("deviceorientation", _onOrientationchange);
+              if (elm == window)
+                _$element.on("deviceorientation", _onOrientationchange);
             break;
             // event:
             // - shake
@@ -201,7 +208,8 @@ public class Gesture extends Events {
               //$.hasGyroscope = true //!window.DeviceOrientationEvent;
               //_$element.get(0).addEventListener("devicemotion", _onDevicemotion, false);
               //_$element.get(0).addEventListener("deviceorientation", _onDeviceorientation, false);
-              _$element.on("devicemotion", _onDevicemotion);
+              if (elm == window)
+                 _$element.on("devicemotion", _onDevicemotion);
             break;
 
             // event:
@@ -247,8 +255,8 @@ public class Gesture extends Events {
             // - touchend: mouseup
             case "tap":
             case "swipe":
-            case "mrotate":
               // _$element.get(0).addEventListener("mousedown", _onTouchstart, false);
+              console.log(_aSplit[1] + " " + _sGestureEvent);
               _$element.bind("contextmenu", _onTouchstart);
               _$element.bind("mousedown", _onTouchstart);
             break;
@@ -504,17 +512,12 @@ public class Gesture extends Events {
     };
   };
 
-  static double lastMotion = 0;
   static Function _onDevicemotion = new Function() {
     public boolean f(Event e) {
-      double now = Duration.currentTimeMillis();
-      if (now - lastMotion < 2000) return false;
-      lastMotion = now;
-
       TouchEvent event_ = e.cast();
 
 //      String _sType;
-      GQuery _$element = $(window);
+      GQuery _$element = $(event_.getCurrentEventTarget());
       //var _bHasGyroscope = $.hasGyroscope;
 
       // skip custom notification: devicemotion is triggered every 0.05s regardlesse of any gesture
@@ -555,7 +558,6 @@ public class Gesture extends Events {
 
       // options
       JsArrayString _aType;
-      JsArrayString _aDescription;
       Properties _oObj;
 
 
@@ -574,7 +576,6 @@ public class Gesture extends Events {
 
             // options
             _aType = JsArrayString.createArray().cast();
-            _aDescription = JsArrayString.createArray().cast();
 
             _aType.push(_sType);
 
@@ -598,7 +599,7 @@ public class Gesture extends Events {
               _aType.push("y-axis");
             }
 
-            if ( ( _sType == "shake" ||_sType == "shakeupdown" ) && ( _oCurrentDevicePosition.accelerationIncludingGravity().z()+9.81 > _oThreshold.updown().sensitivity()  || _oCurrentDevicePosition.accelerationIncludingGravity().z()+9.81 < (-1 * _oThreshold.updown().sensitivity()) ) ) {
+            if ( ( _sType == "shake" ||_sType == "shakeupdown" ) && ( _oCurrentDevicePosition.accelerationIncludingGravity().z()-9.81 > _oThreshold.updown().sensitivity()  || _oCurrentDevicePosition.accelerationIncludingGravity().z()-9.81 < (-1 * _oThreshold.updown().sensitivity()) ) ) {
               _aType.push("updown");
               _aType.push("z-axis");
             }
@@ -646,19 +647,19 @@ public class Gesture extends Events {
 
       GQuery _$element = $(event_.getCurrentEventTarget());
       // var _$element = jQuery(event_.target);
-      EventsListener listener = EventsListener.getInstance(_$element.get(0));
 
       // set the necessary touch events
       if($.hasGestures) {
-        listener.bind("touchmove", null, _onTouchmove);
-        listener.bind("touchend", null, _onTouchend);
+        _$element.bind("touchmove", _onTouchmove);
+        _$element.bind("touchend", _onTouchend);
       }
       // event substitution
       else {
 //        event_.currentTarget.addEventListener('mousemove', _onTouchmove, false);
 //        event_.currentTarget.addEventListener('mouseup', _onTouchend, false);
-        listener.bind("mousemove", null, _onTouchmove);
-        listener.bind("mouseup", null, _onTouchend);
+        _$element.bind("mousemove", _onTouchmove);
+        _$element.bind("mouseup", _onTouchend);
+        _$element.bind("mouseleave", _onTouchend);
       }
 
       // get stored pseudo event
@@ -687,7 +688,7 @@ public class Gesture extends Events {
 
       // trigger custom notification
       _$element.trigger($.jGestures.events().touchstart(), event_, _iFingers);
-      return false;
+      return (_iFingers > 1 && e.getType() == "contextmenu") ? false : true;
     }
   };
 
@@ -732,7 +733,6 @@ public class Gesture extends Events {
         }
       }
 
-
       Options _oDetails;
 
       // there's a swipemove set (not the first occurance), trigger event
@@ -746,6 +746,7 @@ public class Gesture extends Events {
 //      TouchEvent _eventBase = (event_.touches().length() > 0) ? event_.touches().get(0) : event_;
       _oObj.set("oLastSwipemove", GQ.create(Move.class).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
       _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
+
       return false;
     }
   };
@@ -763,12 +764,16 @@ public class Gesture extends Events {
     return null;
   }
 
+  static boolean moved(double x1, double y1, double x2, double y2, double threshold) {
+    return Math.sqrt( Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2)) >= threshold;
+  }
+
   static Function _onTouchend = new Function() {
     public boolean f(Event e) {
       TouchEvent event_ = e.cast();
       TouchEvent _eventBase = getEventBase(event_);
       if (_eventBase == null) {
-        return false;
+        return true;
       }
 
       // ignore bubbled handlers
@@ -776,7 +781,7 @@ public class Gesture extends Events {
 
       GQuery _$element = $(event_.getCurrentEventTarget());
 
-      boolean _bHasTouches = event_.changedTouches().length() > 0;
+      boolean _bHasTouches = hasGestures;
       int _iTouches = (_bHasTouches) ? event_.changedTouches().length() : 1;
       int _iScreenX = (_bHasTouches) ? _eventBase.screenX() : event_.screenX();
       int _iScreenY = (_bHasTouches) ? _eventBase.screenY() : event_.screenY();
@@ -796,6 +801,7 @@ public class Gesture extends Events {
 //        event_.currentTarget.removeEventListener('mouseup', _onTouchend, false);
         _$element.unbind("mousemove", _onTouchmove);
         _$element.unbind("mouseup", _onTouchend);
+        _$element.unbind("mouseleave", _onTouchend);
       }
 
       // get all bound pseudo events
@@ -806,20 +812,13 @@ public class Gesture extends Events {
 
       // if the current change on the x/y position is above the defined threshold for moving an element set the moved flag
       // to distinguish between a moving gesture and a shaking finger trying to tap
-      boolean _bHasMoved = (
-        Math.abs(oStartTouch.screenX() - _iScreenX) > $.jGestures.defaults().thresholdMove() ||
-        Math.abs(oStartTouch.screenY() - _iScreenY) > $.jGestures.defaults().thresholdMove()
-      ) ? true : false;
+      boolean _bHasMoved = moved(oStartTouch.screenX(), oStartTouch.screenY(), _iScreenX, _iScreenY, $.jGestures.defaults().thresholdMove());
 
       // if the current change on the x/y position is above the defined threshold for swiping set the moved flag
       // to indicate we're dealing with a swipe gesture
-      boolean _bHasSwipeGesture = (
-        Math.abs(oStartTouch.screenX() - _iScreenX) > $.jGestures.defaults().thresholdSwipe() ||
-        Math.abs(oStartTouch.screenY() - _iScreenY) > $.jGestures.defaults().thresholdSwipe()
-      ) ? true : false;
+      boolean _bHasSwipeGesture = moved(oStartTouch.screenX(), oStartTouch.screenY(), _iScreenX, _iScreenY, $.jGestures.defaults().thresholdSwipe());
 
       Move _oMovement = GQ.create(Move.class).load(_oDatajQueryGestures.getJavaScriptObject("oMovement"));
-      boolean _bRotate = _oMovement.rotation() != 0;
 
       Move _oEventData ;
 
@@ -850,7 +849,7 @@ public class Gesture extends Events {
         // trigger bound events on this element
         switch(_sType) {
           case "mrotate":
-            if (_bRotate) {
+            if (_oMovement.rotation() != 0) {
               _oDetails.type("mrotate").rotation(_oMovement.rotation()).description("rotation:" + (_oMovement.rotation() < 0 ? "counterclockwise" : "clockwise"));
               _$element.trigger(_sType,_oDetails);
             }
@@ -871,7 +870,7 @@ public class Gesture extends Events {
           case "swipetwo":
           case "swipethree":
           case "swipefour":
-            if( _bRotate || _bHasTouches == false && _iTouches >= 1 && _bHasMoved == false){
+            if(_bHasTouches == false && _iTouches >= 1 && _bHasMoved == false){
               // trigger tap!
               break;
             }
@@ -888,9 +887,9 @@ public class Gesture extends Events {
               // trigger directional swipe
               if (_oDetails.directionName() != null) {
                 _oDetails.type("swipe" + _oDetails.directionName());
-
-                if (_oDetails.type() == _sType)
+                if (_oDetails.type() == _sType) {
                   _$element.trigger(_oDetails.type(),_oDetails);
+                }
               }
             }
           break;
@@ -901,7 +900,7 @@ public class Gesture extends Events {
           case "tapthree":
           case "tapfour":
 
-            if (( /* _bHasTouches && */ _bRotate == false && _bHasMoved != true && _bIsSwipe != true) && (_aDict[_iTouches] == _sType.substring(3)) ) {
+            if (( /* _bHasTouches && */ _bHasMoved != true && _bIsSwipe != true) && (_aDict[_iTouches] == _sType.substring(3)) ) {
               _oDetails.description("tap" + _aDict[_iTouches]);
               _oDetails.type("tap" + _aDict[_iTouches]);
 
@@ -919,7 +918,7 @@ public class Gesture extends Events {
         _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
       }
       _$element.trigger($.jGestures.events().touchendProcessed(),event_);
-      return false;
+      return true;
     }
   };
 
@@ -944,7 +943,7 @@ public class Gesture extends Events {
       Properties _oObj = $$();
       _oObj.set("oStartTouch", GQ.create(Move.class).timestamp(Duration.currentTimeMillis()).getDataImpl());
       _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-      return false;
+      return true;
     }
   };
 
@@ -989,7 +988,7 @@ public class Gesture extends Events {
 
         }
       }
-      return false;
+      return true;
     };
   };
 
@@ -1046,7 +1045,7 @@ public class Gesture extends Events {
         }
       }
       _$element.trigger($.jGestures.events().gestureendProcessed(),event_);
-      return false;
+      return true;
     }
   };
 
@@ -1054,22 +1053,58 @@ public class Gesture extends Events {
     return arr.join(ch);
   }-*/;
 
+  /**
+   * Make the app go full-screen whenever the user touches the screen, useful in modern mobile
+   * devices. We cannot put the screen in full mode without an user click.
+   *
+   * Note: that the classic hack trying to move the scroll does not work fine, and have many
+   * problems with 100% sizes.
+   */
   public Gesture fullScreen() {
-    $(body).bind("click", new Function() {
-      public void f() {
+    return fullScreen(false);
+  }
+
+  /**
+   * Go full-screen once.
+   */
+  public Gesture fullScreenOnce() {
+    return fullScreen(true);
+  }
+
+  private Gesture fullScreen(final boolean once) {
+    EventsListener.getInstance(body).bind(-1, null, hasGestures ? "touchstart" : "mousedown", null, new Function() {public void f() {
         if (!isFullScreen()) goFullScreen();
-    }});
+    }}, once ? 1 : -1);
+    return this;
+  }
+
+  /**
+   * Configure the view port with default values to avoid the user resizing the screen
+   */
+  public Gesture viewPortDefault() {
+    return viewPort(null);
+  }
+
+  /**
+   * Configure the viewport with the provided content;
+   */
+  public Gesture viewPort(String content) {
+    String s = content != null ? content : "user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1";
+    GQuery v = $("meta[name='viewport']", document.getHead());
+    if (v.isEmpty()) {
+      v = $("<meta name='viewport'></meta>").appendTo(document.getHead());
+    }
+    v.attr("content", s);
     return this;
   }
 
   public native void goFullScreen() /*-{
-    var docEl = $doc.documentElement;
-    var fnc = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-    fnc.call(docEl);
+    var e = $doc.documentElement;
+    var fnc = e.requestFullscreen || e.mozRequestFullScreen || e.webkitRequestFullScreen || e.msRequestFullscreen;
+    fnc.call(e);
   }-*/;
 
   public native boolean isFullScreen() /*-{
     return $doc.fullscreenElement && !$doc.mozFullScreenElement && !$doc.webkitFullscreenElement && !$doc.msFullscreenElement
   }-*/;
-
 }

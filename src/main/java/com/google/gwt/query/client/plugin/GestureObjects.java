@@ -3,7 +3,6 @@ package com.google.gwt.query.client.plugin;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.query.client.GQ;
 import com.google.gwt.query.client.builders.JsonBuilder;
-import com.google.gwt.user.client.Event;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,13 +36,11 @@ public interface GestureObjects extends JsonBuilder {
           int sensitivity();
           Sensitivity sensitivity(int i);
         }
-        int requiresShakes();
         int freezeShakes();
         int requiredShakes();
         Sensitivity frontback();
         Sensitivity leftright();
         Sensitivity updown();
-        ThresholdShake requiresShakes(int i);
         ThresholdShake freezeShakes(int i);
         ThresholdShake requiredShakes(int i);
       }
@@ -227,12 +224,12 @@ public interface GestureObjects extends JsonBuilder {
   }
 
   public interface XYZ extends JsonBuilder {
-    int x();
-    XYZ x(int i);
-    int y();
-    XYZ y(int i);
-    int z();
-    XYZ z(int i);
+    double x();
+    XYZ x(double i);
+    double y();
+    XYZ y(double i);
+    double z();
+    XYZ z(double i);
   }
   public interface Shake extends JsonBuilder {
     int eventCount();

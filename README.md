@@ -3,6 +3,11 @@
 ## Introduction
 A gwtQuery plugin for adding gesture events.
 
+## Demo
+Open the [demo](http://manolo.github.io/gwtquery-gesture-demo/index.html) page with either a mobile device or in your desktop, try to tap with one or more fingers on the screen, 
+to move the image, shake your device and change the orientiation.
+
+
 ## Usage
 
 1. You only have to drop the .jar file in your classpath, or add this dependency to your project:

@@ -13,6 +13,7 @@
       <maven.compiler.target>1.7</maven.compiler.target>
       <gQueryVersion>1.4.3-SNAPSHOT</gQueryVersion>
       <gwtversion>2.7.0</gwtversion>
+      <skipTests>true</skipTests>
     </properties>
 
     <distributionManagement>
@@ -22,6 +23,15 @@
         <uniqueVersion>false</uniqueVersion>
       </snapshotRepository>
     </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>sonatype</id>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots><enabled>true</enabled></snapshots>
+            <releases><enabled>false</enabled></releases>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>

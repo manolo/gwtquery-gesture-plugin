@@ -18,10 +18,14 @@ package com.google.gwt.query.client.plugin;
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.query.client.Console;
 import com.google.gwt.query.client.Function;
 import com.google.gwt.query.client.GQ;
 import com.google.gwt.query.client.GQuery;
 import com.google.gwt.query.client.Properties;
+import com.google.gwt.query.client.impl.ConsoleBrowser;
+import com.google.gwt.query.client.js.JsUtils;
 import com.google.gwt.query.client.plugin.GestureObjects.$;
 import com.google.gwt.query.client.plugin.GestureObjects.DevicePosition;
 import com.google.gwt.query.client.plugin.GestureObjects.DeviceWindow;
@@ -255,8 +259,6 @@ public class Gesture extends GQuery {
             // - touchend: mouseup
             case "tap":
             case "swipe":
-              // _$element.get(0).addEventListener("mousedown", _onTouchstart, false);
-              console.log(_aSplit[1] + " " + _sGestureEvent);
               _$element.bind("contextmenu", _onTouchstart);
               _$element.bind("mousedown", _onTouchstart);
             break;
@@ -293,7 +295,14 @@ public class Gesture extends GQuery {
       GQuery _$element = $(elm);
       Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
       _oDatajQueryGestures.remove(eventType);
-      _$element.data("ojQueryGestures" , _oDatajQueryGestures );
+      _$element.data("ojQueryGestures", _oDatajQueryGestures);
+      _$element.off("devicemotion", _onDevicemotion);
+      _$element.off("gesturestart", _onGesturestart);
+      _$element.off("gestureend", _onGestureend);
+      _$element.off("gesturestart", _onGesturestart);
+      _$element.off("gesturechange", _onGesturechange);
+      _$element.off("contextmenu", _onTouchstart);
+      _$element.off("mousedown", _onTouchstart);
     }
 
 
@@ -638,6 +647,8 @@ public class Gesture extends GQuery {
     }
   };
 
+  static List<GQuery> started = new ArrayList<GQuery>();
+
   static Function _onTouchstart = new Function() {
     public boolean f(Event e) {
       TouchEvent event_ = e.cast();
@@ -646,6 +657,7 @@ public class Gesture extends GQuery {
       // if ( event_.currentTarget !== event_.target ) { return; }
 
       GQuery _$element = $(event_.getCurrentEventTarget());
+      started.add(_$element);
       // var _$element = jQuery(event_.target);
 
       // set the necessary touch events
@@ -655,8 +667,6 @@ public class Gesture extends GQuery {
       }
       // event substitution
       else {
-//        event_.currentTarget.addEventListener('mousemove', _onTouchmove, false);
-//        event_.currentTarget.addEventListener('mouseup', _onTouchend, false);
         _$element.bind("mousemove", _onTouchmove);
         _$element.bind("mouseup", _onTouchend);
         _$element.bind("mouseleave", _onTouchend);
@@ -692,6 +702,8 @@ public class Gesture extends GQuery {
     }
   };
 
+
+
   static Function _onTouchmove = new Function() {
     public boolean f(Event e) {
       TouchEvent event_ = e.cast();
@@ -701,7 +713,6 @@ public class Gesture extends GQuery {
       }
 
       GQuery _$element = $(event_.getCurrentEventTarget());
-      // var _$element = jQuery(event_.target);
 
       // get stored pseudo event
       Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
@@ -739,15 +750,16 @@ public class Gesture extends GQuery {
       if (_oDatajQueryGestures.getJavaScriptObject("oLastSwipemove") != null) {
         // check
           _oDetails = _createOptions(GQ.create(OptArgs.class).type("swipemove").touches(_bHasTouches ? event_.touches().length() : 1).screenX(_iScreenX).screenY(_iScreenY).deltaX(_iDeltaX).deltaY(_iDeltaY).startMove(_oEventData).event(event_).timestamp(_oEventData.timestamp()));
-         _$element.trigger(_oDetails.type(), _oDetails);
+          if (!trigger(_$element, event_, _oDetails.type(), _oDetails)) {
+            return false;
+          }
       }
       // store the new values
       Properties _oObj = $$();
 //      TouchEvent _eventBase = (event_.touches().length() > 0) ? event_.touches().get(0) : event_;
       _oObj.set("oLastSwipemove", GQ.create(Move.class).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
       _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
-
-      return false;
+      return true;
     }
   };
 
@@ -770,10 +782,12 @@ public class Gesture extends GQuery {
 
   static Function _onTouchend = new Function() {
     public boolean f(Event e) {
+
+      boolean ret = true;
       TouchEvent event_ = e.cast();
       TouchEvent _eventBase = getEventBase(event_);
       if (_eventBase == null) {
-        return true;
+        return ret;
       }
 
       // ignore bubbled handlers
@@ -792,21 +806,27 @@ public class Gesture extends GQuery {
       // var _$element = jQuery(event_.target);
       // remove events
       if($.hasGestures) {
-        _$element.unbind("touchmove", _onTouchmove);
-        _$element.unbind("touchend", _onTouchend);
+        for (GQuery g: started) {
+          g.unbind("touchmove", _onTouchmove);
+          g.unbind("touchend", _onTouchend);
+        }
       }
       // event substitution
       else {
-//        event_.currentTarget.removeEventListener('mousemove', _onTouchmove, false);
-//        event_.currentTarget.removeEventListener('mouseup', _onTouchend, false);
-        _$element.unbind("mousemove", _onTouchmove);
-        _$element.unbind("mouseup", _onTouchend);
-        _$element.unbind("mouseleave", _onTouchend);
+        for (GQuery g: started) {
+          g.unbind("mousemove", _onTouchmove);
+          g.unbind("mouseup mouseleave", _onTouchend);
+        }
       }
+      started.clear();
 
       // get all bound pseudo events
       Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
+
       _iTouches = _oDatajQueryGestures.getInt("fingers");
+      if (_iTouches == 0) {
+        return ret;
+      }
       _oDatajQueryGestures.set("fingers", 0);
       Move oStartTouch = GQ.create(Move.class).load(_oDatajQueryGestures.getJavaScriptObject("oStartTouch"));
 
@@ -842,7 +862,7 @@ public class Gesture extends GQuery {
 
       // trigger events for all bound pseudo events on this element
       for (String _sType : _oDatajQueryGestures.keys()) {
-        if (!$.special.containsValue(_sType)) continue;
+        if (!$.special.containsValue(_sType) || JsUtils.isDefaultPrevented(event_)) continue;
 
         // swipe marker
         _bIsSwipe = false;
@@ -851,7 +871,7 @@ public class Gesture extends GQuery {
           case "mrotate":
             if (_oMovement.rotation() != 0) {
               _oDetails.type("mrotate").rotation(_oMovement.rotation()).description("rotation:" + (_oMovement.rotation() < 0 ? "counterclockwise" : "clockwise"));
-              _$element.trigger(_sType,_oDetails);
+              ret |= trigger(_$element, event_, _sType, _oDetails);
             }
             break;
           case "swipe":
@@ -880,7 +900,7 @@ public class Gesture extends GQuery {
               _oDetails.type("swipe" + _aDict[_iTouches]);
 
               if (_oDetails.type() == _sType) {
-                _$element.trigger(_oDetails.type(),_oDetails);
+                ret |= trigger(_$element, event_, _sType, _oDetails);
                 break;
               }
 
@@ -888,7 +908,7 @@ public class Gesture extends GQuery {
               if (_oDetails.directionName() != null) {
                 _oDetails.type("swipe" + _oDetails.directionName());
                 if (_oDetails.type() == _sType) {
-                  _$element.trigger(_oDetails.type(),_oDetails);
+                  ret |= trigger(_$element, event_, _sType, _oDetails);
                 }
               }
             }
@@ -904,8 +924,9 @@ public class Gesture extends GQuery {
               _oDetails.description("tap" + _aDict[_iTouches]);
               _oDetails.type("tap" + _aDict[_iTouches]);
 
-              if (_oDetails.type() == _sType)
-                _$element.trigger(_oDetails.type(),_oDetails);
+              if (_oDetails.type() == _sType) {
+                ret |= trigger(_$element, event_, _sType, _oDetails);
+              }
             }
             break;
 
@@ -918,7 +939,7 @@ public class Gesture extends GQuery {
         _$element.data("ojQueryGestures",$.extend(true,_oDatajQueryGestures,_oObj));
       }
       _$element.trigger($.jGestures.events().touchendProcessed(),event_);
-      return true;
+      return ret;
     }
   };
 
@@ -1078,6 +1099,11 @@ public class Gesture extends GQuery {
     return this;
   }
 
+  public Gesture fullScreenNow() {
+    goFullScreen();
+    return this;
+  }
+
   /**
    * Configure the view port with default values to avoid the user resizing the screen
    */
@@ -1096,6 +1122,21 @@ public class Gesture extends GQuery {
     }
     v.attr("content", s);
     return this;
+  }
+
+  private static boolean trigger(GQuery elm, Event evt, String eventName, Object... datas) {
+    elm.data(EventsListener.EVENT_DATA, datas);
+    EventsListener.getInstance(elm.get(0)).dispatchEvent(evt, eventName);
+    elm.removeData(EventsListener.EVENT_DATA);
+    return !JsUtils.isDefaultPrevented(evt);
+  }
+
+  private static boolean trigger(GQuery elm, String eventName, Object... datas) {
+    elm.data(EventsListener.EVENT_DATA, datas);
+    NativeEvent evt = document.createHtmlEvent(eventName, true, true);
+    elm.get(0).dispatchEvent(evt);
+    elm.removeData(EventsListener.EVENT_DATA);
+    return !JsUtils.isDefaultPrevented(evt);
   }
 
   public native void goFullScreen() /*-{

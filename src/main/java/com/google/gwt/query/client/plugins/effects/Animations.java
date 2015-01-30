@@ -38,7 +38,7 @@ import com.google.gwt.query.client.Properties;
 import com.google.gwt.query.client.impl.ConsoleBrowser;
 import com.google.gwt.query.client.js.JsUtils;
 import com.google.gwt.query.client.plugins.Plugin;
-
+import static com.google.gwt.query.client.plugins.effects.Transform.getVendorPropertyName;
 /**
  * Transitions and transformation plugin for gQuery.
  */
@@ -89,6 +89,17 @@ public class Animations extends Transitions {
         frame.transform = to;
       }
     }
+  }
+  
+  static {
+    
+  }
+  
+  static {
+    for (String s: new String[]{"animationName", "animationDirection", "animationDelay", "animationDuration", "animationIterationCount", "animationTimingFunction", "animationFillMode"}) {
+      vendorPropNames.put(s, getVendorPropertyName(s));
+    }
+    console.log(vendorPropNames);
   }
 
   private static final String ANIMATIONPREFIX = "_a_";
@@ -220,13 +231,13 @@ public class Animations extends Transitions {
       tmpDiv.css(f.transform);
       css += f.percent + "% {" + tmpDiv.attr("style") + "}\n";
     }
-    css += "}\n.%NAME%{" + animationName + ":" + name + ";";
-    css += animationDuration + ":" +  (duration != null ? duration : Speed.DEFAULT) + "ms;";
-    css += animationDelay + ":" + (delay != null ? delay : "0") + "ms;";
-    css += animationTimingFunction + ":" + (function != null ? function : "linear") + ";";
-    css += animationIterationCount + ":" + (count != null ? count : "1") + ";";
-    css += animationFillMode + ":" + (fillmode != null ? fillmode : "forwards") + ";";
-    css += animationDirection + ":" + (direction != null ? direction : "normal") + ";";
+    css += "}\n.%NAME%{" + animationName + ":" + name + ";\n";
+    css += animationDuration + ":" +  (duration != null ? duration : Speed.DEFAULT) + "ms;\n";
+    css += animationDelay + ":" + (delay != null ? delay : "0") + "ms;\n";
+    css += animationTimingFunction + ":" + (function != null ? function : "linear") + ";\n";
+    css += animationIterationCount + ":" + (count != null ? count : "1") + ";\n";
+    css += animationFillMode + ":" + (fillmode != null ? fillmode : "forwards") + ";\n";
+    css += animationDirection + ":" + (direction != null ? direction : "normal") + ";\n";
     css += "}\n";
     return insertStyleTag(name, css);
   }

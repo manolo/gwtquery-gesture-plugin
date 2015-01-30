@@ -15,40 +15,38 @@
  */
 package com.google.gwt.query.client.plugins.gestures;
 
-import com.google.gwt.core.client.Duration;
-import com.google.gwt.core.client.JsArrayString;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.query.client.Console;
-import com.google.gwt.query.client.Function;
-import com.google.gwt.query.client.GQ;
-import com.google.gwt.query.client.GQuery;
-import com.google.gwt.query.client.Properties;
-import com.google.gwt.query.client.impl.ConsoleBrowser;
-import com.google.gwt.query.client.js.JsUtils;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.$;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.DevicePosition;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.DeviceWindow;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.Shake;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures.Defaults;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures.Defaults.ThresholdShake;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.Delta;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.Direction;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.OptArgs;
-import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.OptArgs.Move;
-import com.google.gwt.query.client.plugins.Plugin;
-import com.google.gwt.query.client.plugins.events.EventsListener;
-import com.google.gwt.query.client.plugins.events.SpecialEvent;
-import com.google.gwt.query.client.plugins.events.SpecialEvent.DefaultSpecialEvent;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Window;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
+
+import com.google.gwt.core.client.Duration;
+import com.google.gwt.core.client.JsArrayString;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.query.client.Function;
+import com.google.gwt.query.client.GQ;
+import com.google.gwt.query.client.GQuery;
+import com.google.gwt.query.client.Properties;
+import com.google.gwt.query.client.js.JsUtils;
+import com.google.gwt.query.client.plugins.Plugin;
+import com.google.gwt.query.client.plugins.events.EventsListener;
+import com.google.gwt.query.client.plugins.events.SpecialEvent;
+import com.google.gwt.query.client.plugins.events.SpecialEvent.DefaultSpecialEvent;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.$;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.DevicePosition;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.DeviceWindow;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures.Defaults;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures.Defaults.ThresholdShake;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.Delta;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.Direction;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.OptArgs;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.OptArgs.Move;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Shake;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
 
 /**
  * Gesture plugin for touch events.
@@ -62,6 +60,8 @@ public class Gesture extends GQuery {
   private static final DeviceWindow _window;
   public static final Defaults defaults;
   public static final boolean hasGestures;
+  public static boolean isMobile = JsUtils.hasProperty(window, "orientation");
+
 
   public static final Class<Gesture> Gesture = registerPlugin(Gesture.class, new Plugin<Gesture>() {
     public Gesture init(GQuery gq) {
@@ -308,10 +308,10 @@ public class Gesture extends GQuery {
 
     @Override
     public boolean tearDown(Element elm) {
-      // split the arguments to necessary controll arguements
+      // split the arguments to necessary control arguments
       String[] _aSplit = sInternal_.split("_");
       String _sDOMEvent = _aSplit[0]; //
-      // get the associated gesture event and strip the counter: necessary for distinguisihng similliar events such as tapone-tapfour
+      // get the associated gesture event and strip the counter: necessary for distinguishing similar events such as tapone-tapfour
       String _sGestureEvent = _aSplit[1].substring(_aSplit[1].length() -2);
       GQuery _$element = $(elm);
       Properties _oDatajQueryGestures;
@@ -1129,6 +1129,10 @@ public class Gesture extends GQuery {
 
   private static boolean trigger(GQuery elm, Event evt, String eventName, Object... datas) {
     elm.data(EventsListener.EVENT_DATA, datas);
+    if (evt.getChangedTouches() != null && evt.getChangedTouches().length() > 0) {
+      JsUtils.prop(evt, "clientX", evt.getChangedTouches().get(0).getClientX());
+      JsUtils.prop(evt, "clientY", evt.getChangedTouches().get(0).getClientY());
+    }
     EventsListener.getInstance(elm.get(0)).dispatchEvent(evt, eventName);
     elm.removeData(EventsListener.EVENT_DATA);
     return !JsUtils.isDefaultPrevented(evt);

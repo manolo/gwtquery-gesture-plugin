@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.google.gwt.query.client.plugin;
+package com.google.gwt.query.client.plugins.gestures;
 
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.JsArrayString;
@@ -26,18 +26,18 @@ import com.google.gwt.query.client.GQuery;
 import com.google.gwt.query.client.Properties;
 import com.google.gwt.query.client.impl.ConsoleBrowser;
 import com.google.gwt.query.client.js.JsUtils;
-import com.google.gwt.query.client.plugin.GestureObjects.$;
-import com.google.gwt.query.client.plugin.GestureObjects.DevicePosition;
-import com.google.gwt.query.client.plugin.GestureObjects.DeviceWindow;
-import com.google.gwt.query.client.plugin.GestureObjects.JGestures;
-import com.google.gwt.query.client.plugin.GestureObjects.JGestures.Defaults;
-import com.google.gwt.query.client.plugin.GestureObjects.JGestures.Defaults.ThresholdShake;
-import com.google.gwt.query.client.plugin.GestureObjects.Options;
-import com.google.gwt.query.client.plugin.GestureObjects.Options.Delta;
-import com.google.gwt.query.client.plugin.GestureObjects.Options.Direction;
-import com.google.gwt.query.client.plugin.GestureObjects.Options.OptArgs;
-import com.google.gwt.query.client.plugin.GestureObjects.Options.OptArgs.Move;
-import com.google.gwt.query.client.plugin.GestureObjects.Shake;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.$;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.DevicePosition;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.DeviceWindow;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Shake;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures.Defaults;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.JGestures.Defaults.ThresholdShake;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.Delta;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.Direction;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.OptArgs;
+import com.google.gwt.query.client.plugins.gestures.GestureObjects.Options.OptArgs.Move;
 import com.google.gwt.query.client.plugins.Plugin;
 import com.google.gwt.query.client.plugins.events.EventsListener;
 import com.google.gwt.query.client.plugins.events.SpecialEvent;
@@ -686,6 +686,7 @@ public class Gesture extends GQuery {
       if (!$.hasGestures) {
         _iFingers = _iFingers > 1 ? _iFingers : (_iLastFingers + _iFingers);
       }
+
       _oObj.set("oLastSwipemove", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
       _oObj.set("oStartTouch", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
       _oObj.set("oMovement", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).top(_eventBase.screenY()).right(_eventBase.screenX()).bottom(_eventBase.screenY()).left(_eventBase.screenX()).getDataImpl());
@@ -782,7 +783,6 @@ public class Gesture extends GQuery {
 
   static Function _onTouchend = new Function() {
     public boolean f(Event e) {
-
       boolean ret = true;
       TouchEvent event_ = e.cast();
       TouchEvent _eventBase = getEventBase(event_);
@@ -795,6 +795,7 @@ public class Gesture extends GQuery {
 
       GQuery _$element = $(event_.getCurrentEventTarget());
 
+
       boolean _bHasTouches = hasGestures;
       int _iTouches = (_bHasTouches) ? event_.changedTouches().length() : 1;
       int _iScreenX = (_bHasTouches) ? _eventBase.screenX() : event_.screenX();
@@ -803,12 +804,20 @@ public class Gesture extends GQuery {
       // trigger custom notification
       _$element.trigger($.jGestures.events().touchendStart(),event_);
 
+      // get all bound pseudo events
+      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
+      _iTouches = _oDatajQueryGestures.getInt("fingers");
+      if (_iTouches == 0) {
+        return ret;
+      }
+
       // var _$element = jQuery(event_.target);
       // remove events
       if($.hasGestures) {
         for (GQuery g: started) {
           g.unbind("touchmove", _onTouchmove);
           g.unbind("touchend", _onTouchend);
+          g.<Properties>data("ojQueryGestures").set("fingers", 0);
         }
       }
       // event substitution
@@ -816,18 +825,11 @@ public class Gesture extends GQuery {
         for (GQuery g: started) {
           g.unbind("mousemove", _onTouchmove);
           g.unbind("mouseup mouseleave", _onTouchend);
+          g.<Properties>data("ojQueryGestures").set("fingers", 0);
         }
       }
       started.clear();
 
-      // get all bound pseudo events
-      Properties _oDatajQueryGestures = _$element.data("ojQueryGestures");
-
-      _iTouches = _oDatajQueryGestures.getInt("fingers");
-      if (_iTouches == 0) {
-        return ret;
-      }
-      _oDatajQueryGestures.set("fingers", 0);
       Move oStartTouch = GQ.create(Move.class).load(_oDatajQueryGestures.getJavaScriptObject("oStartTouch"));
 
       // if the current change on the x/y position is above the defined threshold for moving an element set the moved flag
@@ -923,6 +925,7 @@ public class Gesture extends GQuery {
             if (( /* _bHasTouches && */ _bHasMoved != true && _bIsSwipe != true) && (_aDict[_iTouches] == _sType.substring(3)) ) {
               _oDetails.description("tap" + _aDict[_iTouches]);
               _oDetails.type("tap" + _aDict[_iTouches]);
+
 
               if (_oDetails.type() == _sType) {
                 ret |= trigger(_$element, event_, _sType, _oDetails);

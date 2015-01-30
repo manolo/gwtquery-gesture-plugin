@@ -1,4 +1,4 @@
-package com.google.gwt.query.client.plugin;
+package com.google.gwt.query.client.plugins.gestures;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.query.client.GQ;

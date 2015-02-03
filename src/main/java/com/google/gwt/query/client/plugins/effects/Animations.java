@@ -28,25 +28,19 @@
  */
 package com.google.gwt.query.client.plugins.effects;
 
-import static com.google.gwt.query.client.plugins.Effects.*;
+import static com.google.gwt.query.client.plugins.effects.Transform.getVendorPropertyName;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.query.client.Console;
 import com.google.gwt.query.client.Function;
 import com.google.gwt.query.client.GQuery;
 import com.google.gwt.query.client.Properties;
-import com.google.gwt.query.client.impl.ConsoleBrowser;
 import com.google.gwt.query.client.js.JsUtils;
 import com.google.gwt.query.client.plugins.Plugin;
-import static com.google.gwt.query.client.plugins.effects.Transform.getVendorPropertyName;
 /**
  * Transitions and transformation plugin for gQuery.
  */
 public class Animations extends Transitions {
   
-  String[] css3names = new String[]{"transition", "transform", "box-shadow"};
-  private static Console console = new ConsoleBrowser();
-
   /**
    * Object representing a CSS3 frame.
    * 
@@ -92,14 +86,9 @@ public class Animations extends Transitions {
   }
   
   static {
-    
-  }
-  
-  static {
     for (String s: new String[]{"animationName", "animationDirection", "animationDelay", "animationDuration", "animationIterationCount", "animationTimingFunction", "animationFillMode"}) {
       vendorPropNames.put(s, getVendorPropertyName(s));
     }
-    console.log(vendorPropNames);
   }
 
   private static final String ANIMATIONPREFIX = "_a_";

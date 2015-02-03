@@ -15,6 +15,8 @@
  */
 package com.google.gwt.query.client.plugins.gestures;
 
+import static com.google.gwt.query.client.plugins.effects.Transform.getVendorPropertyName;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +32,7 @@ import com.google.gwt.query.client.GQuery;
 import com.google.gwt.query.client.Properties;
 import com.google.gwt.query.client.js.JsUtils;
 import com.google.gwt.query.client.plugins.Plugin;
+import com.google.gwt.query.client.plugins.effects.Transitions;
 import com.google.gwt.query.client.plugins.events.EventsListener;
 import com.google.gwt.query.client.plugins.events.SpecialEvent;
 import com.google.gwt.query.client.plugins.events.SpecialEvent.DefaultSpecialEvent;
@@ -62,6 +65,11 @@ public class Gesture extends GQuery {
   public static final boolean hasGestures;
   public static boolean isMobile = JsUtils.hasProperty(window, "orientation");
 
+  static {
+    for (String s: new String[]{"userSelect"}) {
+      com.google.gwt.query.client.plugins.Effects.vendorPropNames.put(s, getVendorPropertyName(s));
+    }
+  }
 
   public static final Class<Gesture> Gesture = registerPlugin(Gesture.class, new Plugin<Gesture>() {
     public Gesture init(GQuery gq) {
@@ -259,6 +267,7 @@ public class Gesture extends GQuery {
             // - touchend: mouseup
             case "tap":
             case "swipe":
+              _$element.as(Transitions.Transitions).css("userSelect", "none");
               _$element.bind("contextmenu", _onTouchstart);
               _$element.bind("mousedown", _onTouchstart);
             break;
@@ -362,6 +371,7 @@ public class Gesture extends GQuery {
             case "swipedown":
             case "swipeleftdown":
             case "swipeleft":
+              _$element.as(Transitions.Transitions).css("userSelect", null);
             case "mrotate":
               _$element.off("touchstart", _onTouchstart);
               _$element.off("touchmove", _onTouchmove);

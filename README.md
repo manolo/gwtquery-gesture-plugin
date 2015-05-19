@@ -15,7 +15,7 @@ to move the image, shake your device and change the orientiation.
    ```
         <dependency>
             <groupId>com.googlecode.gwtquery.plugins</groupId>
-            <artifactId>gesture-plugin</artifactId>
+            <artifactId>gestures-plugin</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>

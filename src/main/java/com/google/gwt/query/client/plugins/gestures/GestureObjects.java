@@ -148,6 +148,10 @@ public interface GestureObjects extends JsonBuilder {
       int vector();
       int screenX();
       int screenY();
+      int pageX();
+      int pageY();
+      int clientX();
+      int clientY();
       OptArgs type(String s);
       OptArgs touches(int i);
       OptArgs deltaY(int i);
@@ -159,6 +163,10 @@ public interface GestureObjects extends JsonBuilder {
       OptArgs vector(int i);
       OptArgs screenX(int i);
       OptArgs screenY(int i);
+      OptArgs pageX(int i);
+      OptArgs pageY(int i);
+      OptArgs clientX(int i);
+      OptArgs clientY(int i);
       double rotation();
       OptArgs rotation(double i);
       double scale();
@@ -221,6 +229,14 @@ public interface GestureObjects extends JsonBuilder {
     int screenY();
     Options screenX(int i);
     Options screenY(int i);
+    int pageX();
+    int pageY();
+    Options pageX(int i);
+    Options pageY(int i);
+    Options clientX(int i);
+    Options clientY(int i);
+    int clientX();
+    int clientY();
   }
 
   public interface XYZ extends JsonBuilder {

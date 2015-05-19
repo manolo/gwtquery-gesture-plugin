@@ -38,6 +38,14 @@ public class TouchEvent extends GqEvent {
     return this.screenY || 0;
   }-*/;
 
+  public native final int clientX() /*-{
+    return this.clientX || 0;
+  }-*/;
+
+  public native final int clientY() /*-{
+    return this.clientY || 0;
+  }-*/;
+
   public native final double scale() /*-{
     return this.scale || 0;
   }-*/;

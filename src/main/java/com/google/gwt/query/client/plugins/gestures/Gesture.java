@@ -506,6 +506,10 @@ public class Gesture extends GQuery {
         .direction(_oDirection)
         .screenX(oOptions_.screenX())
         .screenY(oOptions_.screenY())
+        .pageX(oOptions_.pageX())
+        .pageY(oOptions_.pageY())
+        .clientX(oOptions_.clientX())
+        .clientY(oOptions_.clientY())
         .duration(oOptions_.duration() > 0 ? oOptions_.duration() : oOptions_.startMove().timestamp() > 0 ? _iNow - oOptions_.timestamp() : 0)
         .rotation(oOptions_.rotation())
         .scale(oOptions_.scale())
@@ -697,6 +701,8 @@ public class Gesture extends GQuery {
         _iFingers = _iFingers > 1 ? _iFingers : (_iLastFingers + _iFingers);
       }
 
+      console.log(_eventBase);
+
       _oObj.set("oLastSwipemove", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
       _oObj.set("oStartTouch", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).timestamp(Duration.currentTimeMillis()).getDataImpl());
       _oObj.set("oMovement", GQ.create(Move.class).identifier(_eventBase.identifier()).screenX(_eventBase.screenX()).screenY(_eventBase.screenY()).top(_eventBase.screenY()).right(_eventBase.screenX()).bottom(_eventBase.screenY()).left(_eventBase.screenX()).getDataImpl());
@@ -810,6 +816,10 @@ public class Gesture extends GQuery {
       int _iTouches = (_bHasTouches) ? event_.changedTouches().length() : 1;
       int _iScreenX = (_bHasTouches) ? _eventBase.screenX() : event_.screenX();
       int _iScreenY = (_bHasTouches) ? _eventBase.screenY() : event_.screenY();
+      int _iPageX = (_bHasTouches) ? _eventBase.pageX() : event_.pageX();
+      int _iPageY = (_bHasTouches) ? _eventBase.pageY() : event_.pageY();
+      int _iClientX = (_bHasTouches) ? _eventBase.clientX() : event_.clientX();
+      int _iClientY = (_bHasTouches) ? _eventBase.clientY() : event_.clientY();
 
       // trigger custom notification
       _$element.trigger($.jGestures.events().touchendStart(),event_);
@@ -870,7 +880,7 @@ public class Gesture extends GQuery {
       // calculate distances in relation to the touchstart position not the last touchmove event!
       _iDeltaX = _iScreenX - _oEventData.screenX() ;
       _iDeltaY = _iScreenY - _oEventData.screenY();
-      _oDetails = _createOptions(GQ.create(OptArgs.class).type("swipe").touches(_iTouches).screenY(_iScreenY).screenX(_iScreenX).deltaY(_iDeltaY).deltaX(_iDeltaX).startMove(_oEventData).event(event_).timestamp(_oEventData.timestamp()));
+      _oDetails = _createOptions(GQ.create(OptArgs.class).type("swipe").touches(_iTouches).screenX(_iScreenX).screenY(_iScreenY).pageX(_iPageX).pageY(_iPageY).clientX(_iClientX).clientY(_iClientY).deltaX(_iDeltaX).deltaY(_iDeltaY).startMove(_oEventData).event(event_).timestamp(_oEventData.timestamp()));
 
       // trigger events for all bound pseudo events on this element
       for (String _sType : _oDatajQueryGestures.keys()) {

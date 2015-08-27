@@ -1173,6 +1173,6 @@ public class Gesture extends GQuery {
   }-*/;
 
   public native boolean isFullScreen() /*-{
-    return $doc.fullscreenElement && !$doc.mozFullScreenElement && !$doc.webkitFullscreenElement && !$doc.msFullscreenElement
+    return $doc.fullscreenElement || $doc.mozFullScreenElement || $doc.webkitFullscreenElement || $doc.msFullscreenElement
   }-*/;
 }
